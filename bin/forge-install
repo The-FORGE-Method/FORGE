@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# bin/forge-install — Optional: copy FORGE agents/skills to ~/.claude/ for global use
+# Usage: ./bin/forge-install
+# Safe: prompts before overwriting any existing file
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FORGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# ---- Validation ----
+if [[ ! -d "$FORGE_ROOT/.claude/agents" ]] || [[ ! -d "$FORGE_ROOT/.claude/skills" ]]; then
+    echo "ERROR: FORGE agents/skills not found. Run from FORGE repo root." >&2
+    exit 1
+fi
+
+# ---- Warning ----
+echo "=== FORGE Agent Install ==="
+echo "This will copy FORGE agents and skills to your global ~/.claude/ directory."
+echo ""
+echo "WARNING: This will prompt for confirmation before overwriting any existing files."
+echo ""
+read -rp "Continue? [y/N] " confirm
+if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    echo "Aborted."
+    exit 0
+fi
+
+# ---- Create dirs ----
+mkdir -p "$HOME/.claude/agents"
+mkdir -p "$HOME/.claude/skills"
+
+installed=0
+skipped=0
+
+# ---- Install agents ----
+echo ""
+echo "Installing agents ..."
+for src in "$FORGE_ROOT/.claude/agents/"*.md; do
+    name="$(basename "$src")"
+    dst="$HOME/.claude/agents/$name"
+    if [[ -f "$dst" ]]; then
+        read -rp "  File $name exists. Overwrite? [y/N] " ans
+        if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+            cp "$src" "$dst"
+            echo "    ✓ Overwrote $name"
+            installed=$((installed + 1))
+        else
+            echo "    - Skipped $name"
+            skipped=$((skipped + 1))
+        fi
+    else
+        cp "$src" "$dst"
+        echo "  ✓ Installed $name"
+        installed=$((installed + 1))
+    fi
+done
+
+# ---- Install skills ----
+echo ""
+echo "Installing skills ..."
+for src in "$FORGE_ROOT/.claude/skills/"*/; do
+    name="$(basename "$src")"
+    dst="$HOME/.claude/skills/$name"
+    if [[ -d "$dst" ]]; then
+        read -rp "  Skill $name/ exists. Overwrite? [y/N] " ans
+        if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+            rm -rf "$dst"
+            cp -r "$src" "$dst"
+            echo "    ✓ Overwrote $name/"
+            installed=$((installed + 1))
+        else
+            echo "    - Skipped $name/"
+            skipped=$((skipped + 1))
+        fi
+    else
+        cp -r "$src" "$dst"
+        echo "  ✓ Installed $name/"
+        installed=$((installed + 1))
+    fi
+done
+
+# ---- Summary ----
+echo ""
+echo "=== Install Complete ==="
+echo "Installed: $installed, Skipped: $skipped"
+echo "FORGE agents and skills are now available globally."
+echo "Restart Claude Code to load them."

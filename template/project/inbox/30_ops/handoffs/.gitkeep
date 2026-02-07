@@ -1,0 +1,15 @@
+# Handoffs Directory
+
+This directory contains task briefs for Execution (E) agents/humans.
+
+Files are named: `task-brief-pr-NNN.md`
+
+Examples:
+- `task-brief-pr-001.md`
+- `task-brief-pr-002.md`
+
+Each task brief includes:
+- Goal and scope
+- Files to create/modify
+- Success criteria
+- Quality Gate requirements

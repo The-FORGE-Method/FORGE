@@ -1,0 +1,47 @@
+# FORGE Entry: [Project Name]
+
+**Date:** YYYY-MM-DD
+**Approved By:** [Human Lead Name]
+**Agent:** @C (Commit)
+
+---
+
+## Commitment
+
+We are building: [1-2 sentence description of what we are committed to building]
+
+## In Scope
+
+- [Item 1]
+- [Item 2]
+- [Item 3]
+
+## Out of Scope
+
+- [Item 1]
+- [Item 2]
+
+## Success Criteria
+
+- [Measurable criterion 1]
+- [Measurable criterion 2]
+- [Measurable criterion 3]
+
+## Hard Constraints
+
+- [Constraint 1]
+- [Constraint 2]
+
+## Decision Basis
+
+[Brief explanation of why this direction was chosen, referencing @B options if applicable]
+
+---
+
+FORGE lifecycle agents (F/O/R/G/E) are now **UNLOCKED**.
+
+Next: Invoke @F (Frame) to define product intent, or @G (Govern) for status.
+
+---
+
+*Produced by @C (Commit) — Pre-FORGE lifecycle gate artifact*

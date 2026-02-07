@@ -1,0 +1,12 @@
+# Run Logs Directory
+
+This directory contains summaries of Ops Agent (G) actions.
+
+Files are named: `YYYYMMDD-HHMM-action-summary.md`
+
+Examples:
+- `20260203-1000-build-plan-created.md`
+- `20260203-1200-pr-validated.md`
+- `20260203-1400-escalation-raised.md`
+
+These are human-readable summaries, not raw tool logs.

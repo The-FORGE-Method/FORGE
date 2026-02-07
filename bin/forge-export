@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# bin/forge-export — One-way sync from ~/.claude/ to FORGE repo with scrubbing
+# Usage: ./bin/forge-export
+# Safe to re-run (idempotent). Uses cp overwrite mode.
+set -euo pipefail
+
+# ---- Config ----
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FORGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Agents to export (source name → target name)
+SKILL_AGENTS=(forge-a forge-b forge-c forge-e forge-f forge-g forge-o forge-r)
+STANDALONE_AGENTS=(decision-logger)
+# forge-rd.md is authored in-repo, not exported from ~/.claude/
+
+SKILLS=(forge-a forge-b forge-c forge-e forge-f forge-g forge-o forge-r forge-rd-pipeline)
+
+# Scrubbing patterns — customize these for your organization
+# Add patterns to catch personal names, org names, absolute paths, etc.
+declare -a SCRUB_PATTERNS=(
+    # Example: 's/Your Organization/<ORGANIZATION>/g'
+    # Example: 's/yourusername/<USER>/g'
+    # Example: 's|/Users/yourusername/|~/|g'
+)
+
+# ---- Helpers ----
+log_ok()   { echo "  ✓ $1"; }
+log_skip() { echo "  - $1 (skipped)"; }
+log_err()  { echo "  ✗ $1" >&2; }
+
+# ---- Validation ----
+if [[ ! -f "$FORGE_ROOT/CLAUDE.md" ]] || [[ ! -d "$FORGE_ROOT/_workspace" ]]; then
+    echo "ERROR: Must be run from FORGE repo root (or via bin/forge-export)." >&2
+    exit 1
+fi
+
+echo "=== FORGE Agent Export ==="
+echo ""
+
+# ---- Phase 1: Create directories ----
+mkdir -p "$FORGE_ROOT/.claude/agents"
+mkdir -p "$FORGE_ROOT/.claude/skills"
+
+# ---- Phase 2: Export agents from skills (generate .md from SKILL.md) ----
+echo "Generating agent definitions from skills ..."
+for agent in "${SKILL_AGENTS[@]}"; do
+    src="$HOME/.claude/skills/$agent/SKILL.md"
+    dst="$FORGE_ROOT/.claude/agents/$agent.md"
+    if [[ -f "$src" ]]; then
+        echo "<!-- Generated from .claude/skills/$agent/SKILL.md — do not edit directly, regenerate via bin/forge-export -->" > "$dst"
+        echo "" >> "$dst"
+        cat "$src" >> "$dst"
+        log_ok "$agent.md"
+    else
+        log_err "$agent.md — source not found: $src"
+        exit 1
+    fi
+done
+
+# ---- Phase 3: Export standalone agents ----
+echo ""
+echo "Exporting standalone agents ..."
+for agent in "${STANDALONE_AGENTS[@]}"; do
+    src="$HOME/.claude/agents/$agent.md"
+    dst="$FORGE_ROOT/.claude/agents/$agent.md"
+    if [[ -f "$src" ]]; then
+        echo "<!-- Exported from ~/.claude/agents/$agent.md — regenerate via bin/forge-export -->" > "$dst"
+        echo "" >> "$dst"
+        cat "$src" >> "$dst"
+        log_ok "$agent.md"
+    else
+        log_err "$agent.md — source not found: $src"
+        exit 1
+    fi
+done
+# forge-rd.md is authored in-repo, skip
+log_skip "forge-rd.md (authored in-repo)"
+
+# ---- Phase 4: Export skills ----
+echo ""
+echo "Exporting skills ..."
+for skill in "${SKILLS[@]}"; do
+    src="$HOME/.claude/skills/$skill"
+    dst="$FORGE_ROOT/.claude/skills/$skill"
+    if [[ -d "$src" ]]; then
+        rm -rf "$dst"
+        cp -r "$src" "$dst"
+        log_ok "$skill/"
+    else
+        log_err "$skill/ — source not found: $src"
+        exit 1
+    fi
+done
+
+# Reset forge-rd-pipeline state to idle
+cat > "$FORGE_ROOT/.claude/skills/forge-rd-pipeline/references/pipeline-state.json" << 'IDLE_STATE'
+{
+  "version": 1,
+  "work_item": null,
+  "phase": "IDLE",
+  "status": "idle",
+  "status_display": "No active pipeline",
+  "canon_mode": false,
+  "canon_confirmed": false,
+  "proposal_sha256": null,
+  "blast_radius": null,
+  "questions": [],
+  "questions_answered": 0,
+  "ralph_iterations": 0,
+  "quality_gate_passed": false,
+  "verification_passed": false,
+  "blast_radius_confirmed": false,
+  "work_item_path": null,
+  "started_at": null,
+  "updated_at": null,
+  "error": null
+}
+IDLE_STATE
+
+# ---- Phase 5: Scrub all exported files ----
+echo ""
+echo "Running scrubber on exported files ..."
+scrub_count=0
+while IFS= read -r -d '' file; do
+    changed=false
+    for pattern in "${SCRUB_PATTERNS[@]}"; do
+        if grep -qE "$(echo "$pattern" | sed 's|s/||;s|/.*||')" "$file" 2>/dev/null; then
+            sed -i '' "$pattern" "$file"
+            changed=true
+        fi
+    done
+    if $changed; then
+        scrub_count=$((scrub_count + 1))
+    fi
+done < <(find "$FORGE_ROOT/.claude" -type f \( -name "*.md" -o -name "*.sh" -o -name "*.json" \) -print0)
+echo "  Scrubbed $scrub_count file(s)"
+
+# ---- Phase 6: Verification ----
+echo ""
+echo "Running verification checks ..."
+fail=0
+
+# Check for absolute home paths (common leak)
+if grep -rE '/Users/[a-zA-Z]+/' "$FORGE_ROOT/.claude/" --include="*.md" --include="*.sh" --include="*.json" -q 2>/dev/null; then
+    log_err "FAIL: Absolute home path (/Users/<user>/) found"
+    fail=1
+fi
+
+if grep -rE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' "$FORGE_ROOT/.claude/" --include="*.md" --include="*.sh" --include="*.json" -q 2>/dev/null; then
+    log_err "FAIL: Email address found"
+    fail=1
+fi
+
+if [[ $fail -eq 1 ]]; then
+    echo ""
+    echo "=== Export FAILED — verification errors above ==="
+    exit 1
+fi
+
+log_ok "All verification checks passed"
+
+# ---- Summary ----
+agent_count=$(ls -1 "$FORGE_ROOT/.claude/agents/"*.md 2>/dev/null | wc -l | tr -d ' ')
+skill_count=$(ls -1d "$FORGE_ROOT/.claude/skills/"*/ 2>/dev/null | wc -l | tr -d ' ')
+
+echo ""
+echo "=== Export Complete ==="
+echo "Exported $agent_count agents, $skill_count skills"
+echo "Review changes with: git diff .claude/"
+echo "Commit when ready: git add .claude/ && git commit"

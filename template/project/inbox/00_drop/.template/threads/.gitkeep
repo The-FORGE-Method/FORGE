@@ -1,0 +1,12 @@
+# Threads Directory
+
+Place transcripts, notes, and meeting exports here.
+
+Accepted formats:
+- .md (Markdown)
+- .txt (Plain text)
+
+Examples:
+- brainstorm.md — Voice memo transcription
+- meeting-notes.md — Notes from discussion
+- slack-export.txt — Relevant Slack conversation

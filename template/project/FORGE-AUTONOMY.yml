@@ -1,0 +1,62 @@
+# FORGE Autonomy Policy
+# Schema version: 0.1
+# Documentation: method/templates/forge-template-autonomy-policy.md
+# Introduced: v1.3.0 (Decision-005)
+
+version: 0.1
+
+# Autonomy tier determines routing behavior
+# Tier 0: @G refuses transitions, instructs human (default)
+# Tier 1: @G asks human approval before dispatching
+# Tier 2: Auto-dispatch with guardrails (Phase 2)
+# Tier 3: Full autonomous pipeline (Phase 2)
+tier: 0
+
+# Pre-FORGE gate: file that must exist to unlock F/O/R/G/E agents
+forge_entry:
+  required_file: "abc/FORGE-ENTRY.md"
+  unlock_on_approval: true
+
+# Router behavior constraints
+router:
+  # All transitions must route through @G (no direct role-to-role)
+  allow_direct_role_to_role: false
+  # Where transition events are logged
+  event_log_path: "docs/router-events/"
+
+# Allowed transitions when @G is permitted to route (Tier 1+)
+# Tier 0 ignores this and refuses all transitions
+allowed_transitions:
+  - from: F
+    to: O
+  - from: O
+    to: R
+  - from: R
+    to: G
+  - from: G
+    to: E
+
+# Actions that always require human approval regardless of tier
+human_gates:
+  - constitution_change
+  - scope_change
+  - architecture_change
+  - production_deploy
+  - billing_or_payments
+  - secrets_or_credentials
+  - data_migration_destructive
+
+# Blast radius thresholds for automatic routing (Tier 2/3 only)
+# Tier 0/1 ignores these (no auto-dispatch)
+blast_radius:
+  max_files_changed_auto: 20
+  max_loc_changed_auto: 800
+  forbid_paths:
+    - "docs/constitution/**"
+    - "infra/prod/**"
+
+# Notifications
+notifications:
+  on_checkpoint: true
+  on_exception: true
+  on_autoroute: false  # Not applicable in Tier 0/1

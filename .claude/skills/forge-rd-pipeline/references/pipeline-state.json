@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "work_item": null,
+  "phase": "IDLE",
+  "status": "idle",
+  "status_display": "No active pipeline",
+  "canon_mode": false,
+  "canon_confirmed": false,
+  "proposal_sha256": null,
+  "blast_radius": null,
+  "questions": [],
+  "questions_answered": 0,
+  "ralph_iterations": 0,
+  "quality_gate_passed": false,
+  "verification_passed": false,
+  "blast_radius_confirmed": false,
+  "work_item_path": null,
+  "started_at": null,
+  "updated_at": null,
+  "error": null
+}

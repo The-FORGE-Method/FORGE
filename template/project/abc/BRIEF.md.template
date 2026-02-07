@@ -1,0 +1,50 @@
+# Brief: [Project Name]
+
+**Date:** YYYY-MM-DD
+**Agent:** @B (Brief)
+**Status:** Draft
+
+---
+
+## Problem / Opportunity
+
+[Clear statement of the problem being solved or opportunity being pursued]
+
+## Context Summary
+
+[Normalized summary of all inputs from abc/inbox/]
+
+## Key Findings
+
+1. [Finding 1]
+2. [Finding 2]
+3. [Finding 3]
+
+## Options
+
+See `abc/IDEA_OPTIONS.md` for detailed option analysis.
+
+**Recommended direction:** [Option N] because [rationale]
+
+## Assumptions
+
+See `abc/ASSUMPTIONS.md` for full assumption inventory.
+
+**Highest-risk assumptions:**
+1. [Assumption with highest uncertainty]
+2. [Assumption with highest impact if wrong]
+
+## Open Questions
+
+- [ ] [Question 1 — blocking / non-blocking]
+- [ ] [Question 2 — blocking / non-blocking]
+
+## Next Steps
+
+- [ ] Human reviews brief and options
+- [ ] Human selects direction
+- [ ] Invoke @C (Commit) to lock scope and unlock FORGE
+
+---
+
+*Produced by @B (Brief) — Pre-FORGE lifecycle*

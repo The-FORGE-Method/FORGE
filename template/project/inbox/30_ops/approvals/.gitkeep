@@ -1,0 +1,10 @@
+# Approvals Directory
+
+This directory contains explicit human checkpoint gates.
+
+Files are named: `YYYYMMDD-HHMM-checkpoint-type.md`
+
+Examples:
+- `20260203-1000-build-plan-approval.md`
+- `20260203-1400-phase-1-completion.md`
+- `20260203-1600-pr-merge.md`

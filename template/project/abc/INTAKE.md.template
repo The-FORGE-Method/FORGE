@@ -1,0 +1,39 @@
+# Intake: [Project Name]
+
+**Date:** YYYY-MM-DD
+**Agent:** @A (Acquire)
+**Status:** Draft
+
+---
+
+## What Are We Working On?
+
+[1-2 sentence description of the idea, problem, or opportunity]
+
+## Who Is This For?
+
+[Primary user/audience]
+
+## What's the Goal?
+
+[What success looks like]
+
+## Known Constraints
+
+- [Constraint 1]
+- [Constraint 2]
+
+## Raw Inputs
+
+[Summary of materials provided — transcripts, notes, sketches, etc.]
+
+See `abc/inbox/` for organized source materials.
+
+## Next Steps
+
+- [ ] Review intake with human
+- [ ] Decide: invoke @B (Brief) for sensemaking, or skip to @C (Commit)
+
+---
+
+*Produced by @A (Acquire) — Pre-FORGE lifecycle*
