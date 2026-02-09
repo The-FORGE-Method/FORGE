@@ -1,1 +1,18 @@
-{}
+{
+  "projects": [
+    {
+      "slug": "amigo",
+      "name": "Amigo",
+      "description": "AI Teammate Platform for Organizations",
+      "type": "monorepo",
+      "status": "active"
+    },
+    {
+      "slug": "recalltech",
+      "name": "RecallTech BOLO",
+      "description": "AI-powered BOLO collaboration platform",
+      "type": "single",
+      "status": "active"
+    }
+  ]
+}
