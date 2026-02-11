@@ -16,6 +16,24 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 
 Execute approved handoffs: write tests first, implement code, create PRs, produce completion packets. @E is internally autonomous (may use sub-agents/tools) but externally submissive to FORGE routing (Human → @G → @E).
 
+## Universal Startup Check (MANDATORY — All Agents)
+
+Before proceeding, verify project governance:
+
+1. **Is this project under FORGE/projects/<slug>/?**
+   - YES → Proceed normally
+   - NO → Check FORGE-AUTONOMY.yml for `external_project: true` waiver
+     - Waiver exists → WARN: "Project is external. Location check waived. All other FORGE enforcement (structural verification, Sacred Four, auth gates, PR packets) still applies."
+     - No waiver → HARD STOP: "Project is not under FORGE governance. Cannot proceed."
+
+2. **Does FORGE-AUTONOMY.yml exist?**
+   - YES → Read and apply tier configuration
+   - NO → HARD STOP: "Missing governance policy. Cannot determine autonomy tier."
+
+**Enforcement:** This check runs BEFORE any agent-specific work begins.
+
+**Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
+
 ## Gating Logic
 
 ```
@@ -26,6 +44,19 @@ IF abc/FORGE-ENTRY.md DOES NOT EXIST:
 OTHERWISE:
   PROCEED normally — check for handoff packet or explicit instructions
 ```
+
+## Pre-Flight Verification (MANDATORY)
+
+Before accepting any handoff, run pre-flight checks:
+
+1. **Structure gate** — Verify CLAUDE.md, FORGE-AUTONOMY.yml, abc/FORGE-ENTRY.md, docs/, inbox/ exist
+2. **Test infrastructure gate** — Verify test framework installed, config exists, tests execute (EXCEPTION: `is_test_setup: true` flag)
+3. **Auth readiness gate** — Verify AUTH-ARCHITECTURE ADR exists (if handoff involves auth)
+4. **Sacred Four dry run** — Run typecheck, lint, test, build (WARN on failure, not HARD STOP)
+
+**HARD STOP conditions:** Missing structure, missing test infrastructure (unless PR-000), missing auth architecture (if auth work).
+
+**Failure action:** Produce `docs/ops/preflight-failure-[handoff-id].md`, log to completion packet (status: `blocked`), return to @G, STOP.
 
 ## Workflow
 

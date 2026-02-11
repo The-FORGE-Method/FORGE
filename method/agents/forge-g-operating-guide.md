@@ -424,6 +424,63 @@ blast_radius:
    - Wait for next human instruction or role request
 ```
 
+### 7.1a Structural Verification After @C
+
+When @C completes and produces `abc/FORGE-ENTRY.md`, @G MUST perform structural verification BEFORE routing to @F. This is an automatic @G action, not a new phase.
+
+**Trigger:** `abc/FORGE-ENTRY.md` creation detected
+
+**Action sequence:**
+
+```
+1. READ POLICY
+   - Check FORGE-AUTONOMY.yml for `external_project` waiver
+   - Check project creation date for grandfathering (before 2026-02-10)
+
+2. IF GRANDFATHERED
+   - Log: "Project grandfathered — structural verification skipped"
+   - Proceed to route to @F (per autonomy tier)
+
+3. IF NOT GRANDFATHERED
+   - Run structural verification checklist:
+     [ ] Project under FORGE/projects/<slug>/ OR `external_project: true`
+     [ ] abc/FORGE-ENTRY.md exists
+     [ ] docs/constitution/ exists
+     [ ] docs/adr/ exists
+     [ ] docs/ops/state.md exists
+     [ ] docs/router-events/ exists
+     [ ] inbox/00_drop/ exists
+     [ ] inbox/10_product-intent/ exists
+     [ ] inbox/20_architecture-plan/ exists
+     [ ] inbox/30_ops/handoffs/ exists
+     [ ] tests/ exists (for code projects)
+     [ ] CLAUDE.md exists
+     [ ] FORGE-AUTONOMY.yml exists and is valid
+
+4. EVALUATE RESULT
+   - IF ALL PASS:
+     - Auto-generate `docs/ops/preflight-checklist.md` with PASS status
+     - Log structural verification success to router events
+     - Proceed to route to @F (per autonomy tier)
+
+   - IF ANY FAIL:
+     - Auto-generate `docs/ops/preflight-failure-report.md` with failure details
+     - Log structural verification failure to router events
+     - Instruct human: "Structural verification failed. Address failures before FORGE execution."
+     - STOP (do not route to @F)
+```
+
+**Output artifacts:**
+- `docs/ops/preflight-checklist.md` (on success)
+- `docs/ops/preflight-failure-report.md` (on failure)
+- Router event log entry (all cases)
+
+**Human recovery path (on failure):**
+1. Read `docs/ops/preflight-failure-report.md`
+2. Address missing directories/files
+3. Re-invoke @G to re-run structural verification
+4. On success, @G proceeds to route to @F
+
 ### 7.2 Handling a "Catch Me Up" Request
 
 When a human or session starts with "catch me up" or equivalent:
@@ -472,7 +529,45 @@ When @E submits a completion packet:
    - Log validation result as state_change event
 ```
 
-### 7.4 Session Continuity
+### 7.4 Transition-Specific Validation
+
+Before approving ANY transition, @G MUST validate transition-specific preconditions. These checks are in addition to policy evaluation (Tier 0/1/2/3).
+
+#### On transition @C → @F (after structural verification passes)
+
+- [ ] Structural verification completed with PASS status
+- [ ] `docs/ops/preflight-checklist.md` exists
+
+**IF FAIL → HARD STOP:** "Cannot begin Frame — structural verification incomplete or failed"
+
+#### On transition @F → @O
+
+- [ ] PRODUCT.md exists
+- [ ] All actors in PRODUCT.md have explicit auth plane assignments
+- [ ] Auth model decision (single-plane vs multi-plane) is answered
+
+**IF FAIL → HARD STOP:** "Cannot begin Orchestrate — product framing incomplete or auth planes not assigned"
+
+#### On transition @O → @E (first handoff)
+
+- [ ] TECH.md exists
+- [ ] AUTH-ARCHITECTURE ADR exists (if auth in scope)
+- [ ] Test infrastructure specification exists in TECH.md or `docs/ops/test-infrastructure.md`
+- [ ] Handoff packet exists in `inbox/30_ops/handoffs/`
+
+**IF FAIL → HARD STOP:** "Cannot begin Execute — preconditions unmet: [list missing items]"
+
+#### Universal checks (all transitions)
+
+- [ ] Project is under FORGE/projects/ OR has explicit waiver (`external_project: true`)
+- [ ] `docs/router-events/` exists and is writable
+- [ ] FORGE-AUTONOMY.yml is valid
+
+**IF FAIL → HARD STOP:** "Governance structure invalid"
+
+**Logging:** All transition validation results MUST be logged to router events, regardless of pass/fail.
+
+### 7.5 Session Continuity
 
 When a new session starts:
 

@@ -1,0 +1,90 @@
+# Test Infrastructure
+
+**Project:** [PROJECT_NAME]
+**Date:** [YYYY-MM-DD]
+**Author:** @E (Execute — PR-000 test setup)
+**Status:** [DRAFT | CONFIGURED | OPERATIONAL]
+
+---
+
+## Framework
+
+- **Unit:** [Vitest/Jest/etc.]
+- **Integration:** [Vitest/Jest/etc.]
+- **E2E:** [Playwright/Cypress/etc.]
+- **Coverage:** [c8/istanbul/etc.]
+
+## Configuration
+
+- [ ] Test framework installed (check package.json or equivalent)
+- [ ] Test config file exists (vitest.config.ts, jest.config.ts, etc.)
+- [ ] Coverage configured with thresholds
+- [ ] CI workflow includes Sacred Four
+- [ ] At least one passing test exists
+
+## Sacred Four Commands
+
+```bash
+# Typecheck
+[COMMAND]
+
+# Lint
+[COMMAND]
+
+# Test
+[COMMAND]
+
+# Build
+[COMMAND]
+```
+
+**All four commands MUST pass before any PR merge.**
+
+## Coverage Thresholds
+
+- **Default:** 70% line coverage
+- **Sacred Four paths:** 100% coverage required
+  - Authentication flows
+  - Payment processing (Stripe)
+  - Data integrity operations (create/update/delete with validation)
+  - Security-sensitive paths (authorization, RLS policies)
+
+## Test Execution
+
+**Local:**
+```bash
+[COMMAND to run tests locally]
+```
+
+**CI:**
+```bash
+[COMMAND run by GitHub Actions or equivalent]
+```
+
+## Coverage Reports
+
+**Local:**
+```bash
+[COMMAND to generate coverage report]
+```
+
+**CI:**
+- Coverage reports published to [LOCATION]
+- PRs blocked if coverage delta < 0
+
+---
+
+## Validation Checklist
+
+This template is complete when:
+
+- [ ] All framework types are specified (unit, integration, E2E, coverage)
+- [ ] Configuration checklist is fully checked
+- [ ] Sacred Four commands are documented with exact syntax
+- [ ] Coverage thresholds are defined (default + Sacred Four paths)
+- [ ] Test execution commands are provided (local + CI)
+- [ ] Coverage report generation is documented
+
+**Required by:** @E pre-flight checks (before PR-001)
+
+**Validated by:** @E (test execution verification), @G (artifact existence check)

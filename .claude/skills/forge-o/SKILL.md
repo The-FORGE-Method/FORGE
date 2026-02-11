@@ -58,9 +58,38 @@ OTHERWISE:
 | Arch packets | `inbox/20_architecture-plan/<slug>/` | Architecture planning artifacts |
 | Build plan | `BUILDPLAN.md` | PR sequence and milestones |
 
-## Completion Gate
+## Universal Startup Check (MANDATORY — All Agents)
+
+Before proceeding, verify project governance:
+
+1. **Is this project under FORGE/projects/<slug>/?**
+   - YES → Proceed normally
+   - NO → Check FORGE-AUTONOMY.yml for `external_project: true` waiver
+     - Waiver exists → WARN: "Project is external. Location check waived. All other FORGE enforcement (structural verification, Sacred Four, auth gates, PR packets) still applies."
+     - No waiver → HARD STOP: "Project is not under FORGE governance. Cannot proceed."
+
+2. **Does FORGE-AUTONOMY.yml exist?**
+   - YES → Read and apply tier configuration
+   - NO → HARD STOP: "Missing governance policy. Cannot determine autonomy tier."
+
+**Enforcement:** This check runs BEFORE any agent-specific work begins.
+
+**Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
+
+## Completion Gate (MANDATORY)
+
+TECH.md is NOT complete until:
+1. AUTH-ARCHITECTURE ADR exists (for multi-user/multi-role projects)
+2. Test architecture is specified (framework, coverage, Sacred Four commands)
+3. RLS policy mapping documented (if auth in scope)
+
+**HARD STOP if incomplete.** @O MUST self-validate before declaring completion.
+
+**EXCEPTION:** Single-user, single-role projects MAY skip auth ADR with documented rationale.
 
 - [ ] TECH.md complete with architecture, data model, boundaries
+- [ ] AUTH-ARCHITECTURE ADR exists (for multi-user/multi-role projects)
+- [ ] Test architecture specified
 - [ ] Architecture Packets produced with phase plans
 - [ ] Human approval of architecture
 - [ ] Agent has STOPped and suggested @R or @E

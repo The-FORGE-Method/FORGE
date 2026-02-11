@@ -16,6 +16,24 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Task
 
 Review and refine artifacts for coherence, conflicts, and risks. @R is the quality gate between planning and execution — it ensures all upstream artifacts are consistent and complete before @E begins implementation.
 
+## Universal Startup Check (MANDATORY — All Agents)
+
+Before proceeding, verify project governance:
+
+1. **Is this project under FORGE/projects/<slug>/?**
+   - YES → Proceed normally
+   - NO → Check FORGE-AUTONOMY.yml for `external_project: true` waiver
+     - Waiver exists → WARN: "Project is external. Location check waived. All other FORGE enforcement (structural verification, Sacred Four, auth gates, PR packets) still applies."
+     - No waiver → HARD STOP: "Project is not under FORGE governance. Cannot proceed."
+
+2. **Does FORGE-AUTONOMY.yml exist?**
+   - YES → Read and apply tier configuration
+   - NO → HARD STOP: "Missing governance policy. Cannot determine autonomy tier."
+
+**Enforcement:** This check runs BEFORE any agent-specific work begins.
+
+**Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
+
 ## Gating Logic
 
 ```

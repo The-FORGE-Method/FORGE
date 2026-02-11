@@ -57,9 +57,37 @@ OTHERWISE:
 | Product spec | `docs/constitution/PRODUCT.md` | Product intent specification |
 | Intent packet | `inbox/10_product-intent/<slug>/` | Discovery artifacts |
 
-## Completion Gate
+## Universal Startup Check (MANDATORY — All Agents)
+
+Before proceeding, verify project governance:
+
+1. **Is this project under FORGE/projects/<slug>/?**
+   - YES → Proceed normally
+   - NO → Check FORGE-AUTONOMY.yml for `external_project: true` waiver
+     - Waiver exists → WARN: "Project is external. Location check waived. All other FORGE enforcement (structural verification, Sacred Four, auth gates, PR packets) still applies."
+     - No waiver → HARD STOP: "Project is not under FORGE governance. Cannot proceed."
+
+2. **Does FORGE-AUTONOMY.yml exist?**
+   - YES → Read and apply tier configuration
+   - NO → HARD STOP: "Missing governance policy. Cannot determine autonomy tier."
+
+**Enforcement:** This check runs BEFORE any agent-specific work begins.
+
+**Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
+
+## Completion Gate (MANDATORY)
+
+PRODUCT.md is NOT complete until:
+1. All actors have explicit auth plane assignments
+2. Auth model decision (single-plane vs multi-plane) is answered
+3. If stakeholders exist, STAKEHOLDER-MODEL.md is started
+
+**HARD STOP if incomplete.** @F MUST self-validate before declaring completion.
 
 - [ ] PRODUCT.md complete with actors, use-cases, success criteria
+- [ ] All actors have auth plane assignments
+- [ ] Auth model decision answered
+- [ ] STAKEHOLDER-MODEL.md started (if stakeholders exist)
 - [ ] Human approval of product intent
 - [ ] Agent has STOPped and suggested @O as next step
 

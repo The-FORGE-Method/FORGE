@@ -1,0 +1,88 @@
+# ADR-001: Authentication Architecture
+
+**Project:** [PROJECT_NAME]
+**Date:** [YYYY-MM-DD]
+**Author:** @O (Orchestrate)
+**Status:** [PROPOSED | ACCEPTED | SUPERSEDED]
+
+---
+
+## Context
+
+[What is the auth challenge for this project? Who are the users? What are the sensitivity/compliance requirements?]
+
+## Decision
+
+### Auth Planes
+
+[How many auth planes exist? What is the rationale?]
+
+**Planes:**
+1. [Plane 1 name] — [Description]
+2. [Plane 2 name] — [Description, if multi-plane]
+
+### Role Scoping Mechanism
+
+- [ ] Roles on user profile (flat, per-user)
+- [ ] Roles via scoped membership (per-organization/per-project)
+- [ ] Hybrid
+
+**Implementation:** [How roles are stored and retrieved]
+
+### Auth Provider
+
+[Supabase Auth / Auth0 / Clerk / Custom / etc.]
+
+### RLS Policy Mapping
+
+[How do RLS policies map to this architecture?]
+
+Example:
+```sql
+-- Product users can only see their own data
+CREATE POLICY "product_users_own_data" ON public.profiles
+  FOR ALL USING (auth.uid() = id);
+
+-- Stakeholders can see all data in their organizations
+CREATE POLICY "stakeholders_see_org_data" ON public.organizations
+  FOR SELECT USING (
+    auth.uid() IN (
+      SELECT user_id FROM stakeholder_memberships
+      WHERE organization_id = organizations.id
+    )
+  );
+```
+
+---
+
+## Consequences
+
+**Positive:**
+- [What this decision enables]
+
+**Negative:**
+- [What this decision constrains or complicates]
+
+**Mitigations:**
+- [How negative consequences are addressed]
+
+---
+
+## Validation Checklist
+
+This ADR is complete when:
+
+- [ ] Context explains the auth challenge
+- [ ] Number of auth planes is explicitly stated (1, 2, or more)
+- [ ] Each plane has a name and description
+- [ ] Role scoping mechanism is defined (profile vs membership vs hybrid)
+- [ ] Auth provider is specified
+- [ ] RLS policy mapping is documented with examples
+- [ ] Each actor from STAKEHOLDER-MODEL has a plane assignment
+- [ ] Stakeholder access is not conflated with product access (if multi-plane)
+- [ ] Consequences (positive and negative) are documented
+- [ ] Mitigations for negative consequences are provided
+
+**Required by:** @O completion gate (if multi-user or multi-role project)
+
+**Validated by:** @O (completeness check), @G (artifact existence check before @E handoff)

@@ -2,7 +2,7 @@
 
 **Execution-Grade Documentation for The FORGE Method™**
 
-**Version:** 1.1  
+**Version:** 1.3  
 **Steward:** FORGE Maintainers  
 **Status:** Operational Reference  
 **Prerequisite:** Read FORGE Core first
@@ -107,6 +107,37 @@ Here is exactly what happens each cycle:
 
 **[UNIVERSAL]**
 
+### 1.4 Structural Verification (@G Step)
+
+After @C completes and before @F begins, @G performs an automatic structural verification step. This is NOT a new phase — it is a @G verification action that ensures the project scaffold is valid before FORGE execution begins.
+
+**When it runs:** Immediately after @C produces `abc/FORGE-ENTRY.md`, before routing to @F.
+
+**What @G verifies:**
+
+```
+Structure Gate Checklist:
+[ ] Project exists under FORGE/projects/<slug>/ OR has `external_project: true` in FORGE-AUTONOMY.yml
+[ ] abc/FORGE-ENTRY.md exists
+[ ] docs/constitution/ directory exists
+[ ] docs/adr/ directory exists
+[ ] docs/ops/ directory exists with state.md
+[ ] docs/router-events/ directory exists
+[ ] inbox/00_drop/ directory exists
+[ ] inbox/10_product-intent/ directory exists
+[ ] inbox/20_architecture-plan/ directory exists
+[ ] inbox/30_ops/handoffs/ directory exists
+[ ] tests/ directory exists (for code projects)
+[ ] CLAUDE.md exists at project root
+[ ] FORGE-AUTONOMY.yml exists and is valid
+```
+
+**On success:** @G logs verification success to router events, auto-generates `docs/ops/preflight-checklist.md` with results, proceeds to route to @F (per autonomy tier).
+
+**On failure:** @G logs verification failure, produces failure report at `docs/ops/preflight-failure-report.md`, STOPS. Human MUST address structural issues before FORGE execution can begin.
+
+**Grandfathering:** Projects with `abc/FORGE-ENTRY.md` created before 2026-02-10 are exempt from structural verification. Verification applies only to new projects.
+
 ---
 
 ## Part 2: The Verification Sequence
@@ -129,6 +160,8 @@ Specific commands vary by stack, but the pattern is invariant:
 | **build** | Production readiness | Bundle/compilation issues |
 
 **Critical:** All four must pass. Tests passing does not mean build passes. Build catches route conflicts, missing exports, and bundle issues that tests miss.
+
+**Zero-test enforcement:** The test step MUST execute at least one test. Zero tests is a Sacred Four FAILURE, not a pass. Test runner output showing "no tests found" is a gate failure. @E MUST verify that test files exist AND that the test runner executes tests before claiming Sacred Four success.
 
 **[UNIVERSAL]**
 
@@ -921,6 +954,109 @@ abc/
 
 ---
 
+## Part 13: Enforcement Matrix
+
+This matrix defines what agent enforces what rule at what trigger point. It is the operational reference for FORGE enforcement mechanisms.
+
+### Core Enforcement Rules
+
+| Rule | Enforcing Agent | Trigger Point | Failure Mode | Bypass |
+|------|----------------|---------------|--------------|--------|
+| Project under FORGE/projects/ | ALL agents (startup) | Agent invocation | HARD STOP (unless waiver) | `external_project: true` in FORGE-AUTONOMY.yml (waives location only — all other enforcement still applies) |
+| Template scaffold structure valid | @G | Structural verification step after @C | HARD STOP | None |
+| Test framework installed | @E | Before first PR | HARD STOP | `is_test_setup: true` flag in handoff (PR-000 only) |
+| At least one test exists | @E | Before every PR | HARD STOP | `is_test_setup: true` flag in handoff (PR-000 only) |
+| Sacred Four passes with real tests | @E | Before every PR merge | HARD STOP | None |
+| Auth architecture ADR exists | @G | Before first auth-related @E handoff | HARD STOP | N/A if no auth in scope |
+| Stakeholder model defined | @F | Frame completion gate | HARD STOP | N/A if no stakeholders |
+| Actor plane assignment explicit | @F | Frame completion gate | HARD STOP | None |
+| Role scoping documented | @O | Orchestrate completion gate | HARD STOP | None |
+| Handoff packet exists | @E | Before starting handoff work | HARD STOP | None |
+| PR packet produced | @E | Before PR creation | HARD STOP | PR-000 (`is_test_setup: true`) and docs-only PRs (no code changes) |
+| Router events logged | @G | Every transition | WARN (degraded governance) | None |
+| Coverage delta >= 0 | @E + CI | Every PR | HARD STOP | None |
+| FORGE-AUTONOMY.yml exists | ALL agents | Agent invocation | HARD STOP | None |
+
+### Enforcement Timeline
+
+```
+Project Lifecycle with Enforcement Points:
+
+  @A (Acquire)
+  ├── CHECK: Project will be created under FORGE/projects/ ← NEW
+  └── OUTPUT: abc/INTAKE.md
+
+  @C (Commit)
+  ├── CHECK: abc/INTAKE.md exists
+  └── OUTPUT: abc/FORGE-ENTRY.md  [EXISTING GATE]
+
+  ──── STRUCTURAL VERIFICATION (@G STEP) ──── [NEW]
+  │
+  │  @G verifies:
+  │  ├── Project structure matches template
+  │  ├── FORGE-AUTONOMY.yml exists
+  │  ├── docs/ structure exists
+  │  ├── inbox/ structure exists
+  │  ├── tests/ directory exists
+  │  └── OUTPUT: docs/ops/preflight-checklist.md [PASS or HARD STOP]
+  │
+
+  @F (Frame)
+  ├── CHECK: Structural verification passed ← NEW
+  ├── CHECK: Preflight checklist exists ← NEW
+  ├── MANDATORY DECISION: Auth planes ← NEW
+  ├── MANDATORY DECISION: Stakeholder model ← NEW
+  └── OUTPUT: PRODUCT.md (enhanced)
+
+  @O (Orchestrate)
+  ├── CHECK: Actor planes assigned in PRODUCT.md ← NEW
+  ├── MANDATORY OUTPUT: Auth architecture ADR ← NEW
+  ├── MANDATORY OUTPUT: Test architecture spec ← NEW
+  └── OUTPUT: TECH.md (enhanced)
+
+  @G (Transition to Execute)
+  ├── CHECK: Auth ADR exists (if auth in scope) ← NEW
+  ├── CHECK: Test infrastructure configured ← NEW
+  ├── CHECK: Handoff packet in inbox/30_ops/handoffs/ ← NEW
+  └── APPROVE or HARD STOP
+
+  @E (Execute)
+  ├── PRE-FLIGHT: Structure check ← NEW
+  ├── PRE-FLIGHT: Test infra check ← NEW
+  ├── PRE-FLIGHT: Auth readiness check ← NEW
+  ├── PRE-FLIGHT: Sacred Four dry run ← NEW
+  ├── WORK: Tests-first implementation [EXISTING]
+  ├── CHECK: Coverage gate [EXISTING, now verified]
+  ├── CHECK: PR packet produced ← NEW enforcement
+  └── OUTPUT: PR + Completion Packet
+```
+
+### Grandfathering Policy
+
+**Effective date:** 2026-02-10
+
+**Policy:** Projects with `abc/FORGE-ENTRY.md` created before 2026-02-10 are exempt from new enforcement gates introduced in this hardening release. New gates apply only to projects created after structural verification enforcement is implemented.
+
+**What is grandfathered:**
+- Structural verification step (@G after @C)
+- @F auth plane decision gate
+- @O auth architecture ADR requirement
+- @E pre-flight checks (structure, test infra, auth readiness)
+- Universal project location check
+
+**What is NOT grandfathered (applies to all projects immediately):**
+- Sacred Four zero-test enforcement: Zero tests is a FAILURE for all projects, all PRs, effective immediately. This is a clarification of existing Sacred Four semantics, not a new rule. There is no grace period. Projects with zero tests MUST add tests before their next PR.
+- Enforcement matrix documentation (operational reference only)
+
+**Migration:** Existing projects MAY voluntarily adopt new enforcement gates by:
+1. Running structural verification manually via @G
+2. Adding missing templates (STAKEHOLDER-MODEL, AUTH-ARCHITECTURE ADR, etc.)
+3. Updating project CLAUDE.md to reflect new non-negotiables
+
+Migration is optional. Grandfathered projects remain fully valid FORGE projects.
+
+---
+
 ## Version History
 
 | Version | Date | Changes |
@@ -929,6 +1065,7 @@ abc/
 | 1.1 | 2026-01-04 | Extracted as Operations Manual; incorporated CC ground-truth review; added FORGE Cycle, decision heuristics, kill switches, context integrity |
 | 1.1.1 | 2026-01-04 | CC validation passed; added error classification heuristics; generalized identity file reference; added parallel work note |
 | 1.2 | 2026-02-06 | Added Appendix F: Router operations, event logging, FORGE-AUTONOMY.yml, pre-FORGE lifecycle (Decision-005) |
+| 1.3 | 2026-02-11 | System hardening: Added @G structural verification step, Sacred Four zero-test enforcement, enforcement matrix, grandfathering policy |
 
 ---
 

@@ -1,0 +1,54 @@
+# Stakeholder Model
+
+**Project:** [PROJECT_NAME]
+**Date:** [YYYY-MM-DD]
+**Author:** @F (Frame)
+**Status:** [DRAFT | ACCEPTED]
+
+---
+
+## Auth Planes
+
+| Plane | Description | Auth Provider | Role Scoping |
+|-------|-------------|---------------|--------------|
+| [Product/Stakeholder/Admin] | | | |
+
+## Decision
+
+- [ ] Single-plane auth (all actors share one auth system)
+- [ ] Multi-plane auth (actors are separated into distinct systems)
+
+**Rationale:** [Why this choice]
+
+## Role Architecture
+
+- [ ] Roles on user profile (flat, per-user)
+- [ ] Roles via scoped membership (per-organization/per-project)
+- [ ] Hybrid
+
+**Rationale:** [Why this choice]
+
+## Actor → Plane Mapping
+
+| Actor | Plane | Roles | Scoping |
+|-------|-------|-------|---------|
+| | | | |
+
+---
+
+## Validation Checklist
+
+This template is complete when:
+
+- [ ] All auth planes are defined with description, provider, and scoping
+- [ ] Single-plane OR multi-plane decision is checked (exactly one)
+- [ ] Rationale for plane decision is provided
+- [ ] Role architecture decision is checked (at least one)
+- [ ] Rationale for role architecture is provided
+- [ ] Actor → Plane Mapping table is populated with all actors from PRODUCT.md
+- [ ] Every actor has explicit plane assignment
+- [ ] Every actor has role scoping defined
+
+**Required by:** @F completion gate (if stakeholders exist in PRODUCT.md)
+
+**Validated by:** @F (schema check), @G (artifact existence check before @O handoff)

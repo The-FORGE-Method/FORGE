@@ -2,7 +2,7 @@
 
 **Frame. Orchestrate. Refine. Govern. Execute.**
 
-**Version:** 1.2
+**Version:** 1.3
 **Steward:** FORGE Maintainers
 **Status:** Canonical  
 **Website:** theforgemethod.org
@@ -151,6 +151,35 @@ Every project has a single source of truth object. All artifacts are projections
 ### Law 5: Hard Stops Are Non-Negotiable
 
 When entry criteria aren't met, work stops. When escalation triggers fire, humans decide. Decisiveness over patience.
+
+### Law 5a: Preconditions Are Hard Stops
+
+Every agent MUST verify its preconditions before producing artifacts. Preconditions are not advisory — they are gates.
+
+**Universal preconditions (all agents):**
+- Project is under FORGE governance (FORGE/projects/ or explicit waiver)
+- FORGE-AUTONOMY.yml exists and is valid
+- Required upstream artifacts exist
+
+**Phase-specific preconditions:**
+- @F: FORGE-ENTRY.md exists, structural verification passed
+- @O: PRODUCT.md exists with actor plane assignments
+- @E: Test infrastructure configured, handoff packet exists, auth ADR exists (if auth in scope)
+- @G: Project structure valid, router-events directory writable
+
+**Enforcement:**
+An agent that cannot verify its preconditions MUST STOP. "Precondition unknown" is equivalent to "precondition failed." Zero tests is a test gate failure, not a test gate pass.
+
+### Rule: Explicit Architecture Decisions
+
+For the following concerns, FORGE requires an explicit, documented decision before implementation begins. Implicit defaults are canon violations:
+
+1. **Auth planes:** How many auth systems? Who belongs to which?
+2. **Role scoping:** Profile-level or membership-level?
+3. **Stakeholder separation:** Same plane as product users or different?
+4. **Test infrastructure:** What framework? What coverage tool? What thresholds?
+
+These decisions are captured in Architecture Decision Records (ADRs) in `docs/adr/`. @O produces them. @G verifies them. @E refuses to proceed without them.
 
 ---
 
@@ -314,8 +343,8 @@ FORGE extensions are foundational capabilities that enhance projects. Some are r
 - **[Discovery Pack](../docs/extensions/discovery-pack.md)** — Structured discovery-to-spec methodology. Every FORGE project begins with discovery.
 
 **For Software Projects:**
-- **[Auth/RBAC](../docs/extensions/auth-rbac.md)** — Identity and permission foundation. Ships Day One.
-- **[Stakeholder Interface](../docs/extensions/stakeholder-interface.md)** — First-party visibility, feedback, and AI assistance. Ships Day One.
+- **[Auth/RBAC](../docs/extensions/auth-rbac.md)** — Identity and permission foundation. Ships Day One. Auth architecture decisions MUST be documented in an ADR before implementation begins.
+- **[Stakeholder Interface](../docs/extensions/stakeholder-interface.md)** — First-party visibility, feedback, and AI assistance. Ships Day One. If stakeholders are distinct from product users, a STAKEHOLDER-MODEL MUST define the plane separation.
 
 ### Optional Extensions
 
@@ -373,6 +402,7 @@ FORGE Core is available under a permissive license:
 | 1.0 | 2026-01-03 | Initial release |
 | 1.1 | 2026-01-04 | Restructured as Core + Operations Manual; added The FORGE Cycle concept; incorporated CC ground-truth review |
 | 1.2 | 2026-01-23 | Added Extensions section: Auth/RBAC, Stakeholder Interface, Discovery Pack as foundational capabilities |
+| 1.3 | 2026-02-11 | System hardening: Added Law 5a (preconditions), Explicit Architecture Decisions rule, enhanced Required Extensions with auth/stakeholder model requirements |
 
 ---
 

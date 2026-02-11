@@ -271,6 +271,70 @@ capability_limitations:
 
 ---
 
+## 5.5 Pre-Flight Verification
+
+Before accepting any handoff, @E MUST run pre-flight checks IN ORDER. These checks are HARD STOPS — if any check fails, @E produces a failure report and STOPS.
+
+### Check 1: Structure
+
+- [ ] Project root has CLAUDE.md
+- [ ] Project root has FORGE-AUTONOMY.yml
+- [ ] abc/FORGE-ENTRY.md exists
+- [ ] docs/ structure matches template scaffold
+- [ ] inbox/30_ops/handoffs/ exists
+
+**IF ANY FAIL → HARD STOP.** Report: "Structure gate failed: [missing items]"
+
+### Check 2: Test Infrastructure
+
+- [ ] Test framework is installed (check package.json or equivalent)
+- [ ] Test config file exists (vitest.config.ts, jest.config.ts, etc.)
+- [ ] `pnpm test` (or equivalent) executes and produces output (NOT "no tests found")
+- [ ] At least one test file exists (*.test.*, *.spec.*)
+
+**IF ANY FAIL → HARD STOP.** Report: "Test infrastructure gate failed: [missing items]"
+
+**EXCEPTION:** If handoff packet contains `is_test_setup: true` flag (PR-000 test infrastructure setup), skip test checks and proceed.
+
+### Check 3: Auth Readiness (conditional)
+
+**IF handoff involves auth, roles, permissions, or user management:**
+
+- [ ] AUTH-ARCHITECTURE ADR exists in docs/adr/
+- [ ] Stakeholder model defined in docs/constitution/ (if stakeholders in scope)
+- [ ] Role scoping mechanism documented (profile vs membership)
+
+**IF ANY FAIL → HARD STOP.** Report: "Auth architecture gate failed: [missing items]"
+
+**IF handoff does NOT involve auth:** Skip this check.
+
+### Check 4: Sacred Four Dry Run
+
+- [ ] `pnpm typecheck` succeeds (or reports expected pre-existing errors only)
+- [ ] `pnpm lint` succeeds
+- [ ] `pnpm test` succeeds (with actual test execution, not "no tests found")
+- [ ] `pnpm build` succeeds
+
+**IF ANY FAIL → WARN.** Report: "Sacred Four pre-flight warning: [details]"
+
+(Not a hard stop because the handoff may fix these issues, but @E must be aware.)
+
+### Failure Reporting
+
+On any HARD STOP, @E:
+1. Produces pre-flight failure report: `docs/ops/preflight-failure-[handoff-id].md`
+2. Logs failure to completion packet (status: `blocked`)
+3. Returns to @G with failure details
+4. STOPS (does not proceed with implementation)
+
+### Success Path
+
+If all checks pass (or are skipped with valid exceptions):
+1. @E logs pre-flight success to completion packet
+2. @E proceeds with implementation per handoff packet
+
+---
+
 ## 5. Escalation Triggers
 
 @E must **STOP** and escalate to @G + Human when any of these conditions occur:
@@ -518,6 +582,8 @@ quality_loops_run: 1 (Ralph iteration for test improvement)
 - [ ] Markdown narrative explains "why" for key decisions
 - [ ] Constraints from handoff packet are addressed
 - [ ] Acceptance criteria from handoff packet are met
+
+**PR packet exemptions:** PR-000 (`is_test_setup: true` in handoff) and docs-only PRs (no code changes) are exempt from the full completion packet requirement. These PRs still require a commit message explaining scope but do not need YAML frontmatter or full narrative.
 
 **If validation fails:** @G returns to @E with specific issues to fix.
 

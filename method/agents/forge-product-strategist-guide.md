@@ -143,6 +143,33 @@ Stop condition is reached when ALL are true:
 
 ---
 
+## Completion Gate: Required Decisions
+
+PRODUCT.md is NOT complete until the following decisions are explicitly documented:
+
+### Actor Classification (MANDATORY)
+
+For each actor identified:
+- [ ] Actor is assigned to an explicit auth plane (Product/Stakeholder/Admin/etc.)
+- [ ] Actor's role scoping is defined (profile-level vs membership-level)
+- [ ] Actor's data boundaries are defined (what can they see/do?)
+
+### Stakeholder Decision (MANDATORY if stakeholders exist)
+
+- [ ] "Are stakeholders and product users in the same auth plane?" — EXPLICITLY ANSWERED
+- [ ] If multi-plane: STAKEHOLDER-MODEL.md started (to be completed by @O)
+- [ ] If single-plane: rationale documented in PRODUCT.md
+
+**IF NOT ANSWERED → HARD STOP:** "Cannot complete Frame without auth plane decision"
+
+**Validation:** @F MUST self-validate before declaring PRODUCT.md complete. @G will re-validate during @F → @O transition.
+
+**Output artifacts:**
+- Enhanced PRODUCT.md with actor plane assignments table
+- STAKEHOLDER-MODEL.md (if stakeholders exist) — draft started, to be completed by @O
+
+---
+
 ## Handoff Protocol
 
 ### Product Strategist → Human Lead

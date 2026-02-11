@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "work_item": "2026-02-10-forge-system-hardening",
+  "generated_at": "2026-02-10T12:00:00Z",
+  "files": [
+    {
+      "path": "README.md",
+      "size": 1964,
+      "type": "md",
+      "sha256": "dce50395054d9ed993d1931501f765bf4c833cd9bf940028fa3f1d9ca3893436"
+    },
+    {
+      "path": "threads/system-review-analysis.md",
+      "size": 31789,
+      "type": "md",
+      "sha256": "bec96a105ef0104ef9c09c30bfabf1f3f187ea7617d5698d50fd322d3286846c"
+    }
+  ],
+  "total_files": 2,
+  "total_size_bytes": 33753,
+  "canon_paths_detected": [
+    "method/core/forge-core.md",
+    "method/core/forge-operations.md"
+  ],
+  "canon_mode": true
+}

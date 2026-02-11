@@ -105,6 +105,93 @@ This template defines testing philosophy, infrastructure, and requirements for F
 1. ❌ Ship feature without tests
 2. ❌ Add tests "when we have time"
 
+### 1.4 Zero-Test Clarification (CRITICAL)
+
+The Sacred Four test step MUST execute at least one test. Zero tests is a Sacred Four FAILURE, not a pass.
+
+**Enforcement:**
+
+1. **File existence check:** At least one `.test.` or `.spec.` file MUST exist before running test command
+2. **Test runner output check:** Test runner MUST produce test execution output, NOT "no tests found" message
+3. **Both checks required:** File existence alone is insufficient; test runner MUST execute tests
+
+**Examples of FAILURE:**
+
+```
+# Example 1: No test files exist
+$ pnpm test
+No test files found.
+→ FAILURE (zero tests)
+
+# Example 2: Test files exist but test runner finds nothing
+$ pnpm test
+0 tests found
+→ FAILURE (zero tests)
+
+# Example 3: Test framework not configured
+$ pnpm test
+Error: No test configuration found
+→ FAILURE (test infrastructure missing)
+```
+
+**Examples of PASS:**
+
+```
+# Example: At least one test executes
+$ pnpm test
+✓ auth.test.ts (2 tests) 123ms
+  ✓ user can sign up
+  ✓ user can log in
+
+Tests: 2 passed (2 total)
+→ PASS (tests executed and passed)
+```
+
+**Agent enforcement:**
+- @E MUST verify test infrastructure exists before first PR (pre-flight check)
+- @E MUST verify test runner executes tests (not just exits successfully) before every PR
+- @G MUST validate completion packets report `tests_added > 0` and `tests_passed > 0`
+
+**Exception:** See PR-000 Exception below.
+
+### 1.5 PR-000 Exception: Test Infrastructure Setup
+
+The first PR in any FORGE project MUST set up test infrastructure. This creates a circular dependency: PR-000 cannot have tests because its purpose is to create the test framework.
+
+**Exception mechanism:**
+
+1. **Handoff packet flag:** The handoff packet for PR-000 MUST contain `is_test_setup: true`
+2. **@E behavior:** When `is_test_setup: true` flag is present, @E skips pre-flight test infrastructure checks
+3. **Validation:** @E MUST produce test infrastructure as output of PR-000
+4. **One-time use:** Only PR-000 may use this exception; all subsequent PRs require tests
+
+**Example handoff packet (YAML frontmatter):**
+
+```yaml
+---
+handoff_id: HO-2026-001-test-setup
+handoff_type: infrastructure
+is_test_setup: true  # ← EXCEPTION FLAG
+scope: |
+  Set up Vitest test framework with coverage reporting.
+  Configure Sacred Four commands in package.json.
+  Create at least one passing stub test.
+acceptance_criteria:
+  - Vitest installed and configured
+  - At least one .test.ts file with passing test
+  - Sacred Four commands documented in package.json
+  - CI workflow includes Sacred Four
+---
+```
+
+**Delivery requirements for PR-000:**
+- Test framework installed and configured
+- At least one passing test file created
+- Sacred Four commands functional
+- `docs/ops/test-infrastructure.md` created and complete
+
+**After PR-000:** All subsequent PRs MUST have tests. The exception flag is invalid for any handoff after test infrastructure exists.
+
 ---
 
 ## 2. The Test Pyramid

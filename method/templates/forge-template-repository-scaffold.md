@@ -386,6 +386,50 @@ If the Kickoff Brief doesn't specify, default to `tests/` at root.
 
 ---
 
+## Required Structure Verification
+
+The following directories and files MUST exist before @E begins execution. @G verifies this checklist during structural verification after @C completes.
+
+### Mandatory (all projects)
+
+- `abc/FORGE-ENTRY.md` — Gate artifact for FORGE unlock
+- `docs/constitution/` — Product intent and governance documents
+- `docs/adr/` — Architecture decision records
+- `docs/ops/state.md` — Execution state narrative
+- `docs/ops/preflight-checklist.md` — Structural verification results
+- `docs/router-events/` — Append-only router event logs
+- `inbox/00_drop/` — Discovery input
+- `inbox/10_product-intent/` — Product strategist outputs
+- `inbox/20_architecture-plan/` — Architect outputs
+- `inbox/30_ops/handoffs/` — Execution handoff packets
+- `CLAUDE.md` — Project identity and constraints
+- `FORGE-AUTONOMY.yml` — Autonomy policy configuration
+
+### Mandatory (projects with auth)
+
+- `docs/constitution/STAKEHOLDER-MODEL.md` — Auth plane and role architecture (if stakeholders exist)
+- `docs/adr/001-auth-architecture.md` — Auth architecture decision record (if multi-user/multi-role)
+
+### Mandatory (projects with code)
+
+- `tests/` — Test directory
+- Test framework config file (vitest.config.ts, jest.config.ts, etc.)
+- At least one `.test.` or `.spec.` file with passing test
+- CI workflow with Sacred Four (`.github/workflows/` or equivalent)
+- `docs/ops/test-infrastructure.md` — Test framework and coverage documentation
+
+### Enforcement
+
+**When:** @G verifies structure after @C completion (before routing to @F)
+
+**On failure:** @G produces `docs/ops/preflight-failure-report.md` with missing items, STOPS. Human MUST address failures.
+
+**On success:** @G auto-generates `docs/ops/preflight-checklist.md` with verification results, proceeds to route to @F (per autonomy tier).
+
+**Grandfathering:** Projects created before 2026-02-10 are exempt from structural verification.
+
+---
+
 ## Common Failure Modes
 
 | Failure | Symptom | Prevention |

@@ -151,10 +151,51 @@
 
 ---
 
+## Completion Gate: Auth Architecture
+
+TECH.md is NOT complete until the following are documented:
+
+### Auth Architecture ADR (MANDATORY for projects with auth)
+
+**Applies to:** Multi-user OR multi-role projects
+
+- [ ] ADR exists in `docs/adr/` with auth architecture decision
+- [ ] Number of auth planes documented
+- [ ] Role scoping mechanism specified (profile vs membership)
+- [ ] RLS policy mapping documented
+- [ ] Stakeholder vs product boundary defined (if applicable)
+
+**IF NOT COMPLETE → HARD STOP:** "Cannot complete Orchestration without auth architecture ADR"
+
+**EXCEPTION:** Single-user, single-role projects (e.g., admin-only tools) MAY skip auth ADR. Rationale MUST be documented in TECH.md.
+
+### Test Architecture (MANDATORY for projects with code)
+
+- [ ] Test framework specified
+- [ ] Coverage tool specified
+- [ ] Sacred Four commands documented
+- [ ] CI/CD integration specified
+- [ ] Coverage thresholds defined (default + Sacred Four paths)
+
+**IF NOT COMPLETE → HARD STOP:** "Cannot complete Orchestration without test architecture specification"
+
+**Delivery:** @O produces `docs/ops/test-infrastructure.md` OR includes test architecture in TECH.md.
+
+**Validation:** @O MUST self-validate before declaring TECH.md complete. @G will re-validate during @O → @E transition.
+
+**Output artifacts:**
+- `docs/adr/001-auth-architecture.md` (if auth in scope)
+- `docs/ops/test-infrastructure.md` OR test architecture section in TECH.md
+- Enhanced TECH.md with auth and test architecture references
+
+---
+
 ## Completion Gate
 
 All must be true:
 - [ ] TECH.md complete with architecture, data model, boundaries
+- [ ] AUTH-ARCHITECTURE ADR exists (for multi-user/multi-role projects)
+- [ ] Test architecture specified (framework, coverage, Sacred Four)
 - [ ] Architecture Packets produced with phase plans
 - [ ] BUILDPLAN.md created with PR sequence
 - [ ] Key architecture decisions documented as ADRs
