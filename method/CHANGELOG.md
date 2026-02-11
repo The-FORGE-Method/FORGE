@@ -8,6 +8,47 @@ Format: `[YYYY-MM-DD] Title` with summary, files touched, and impact scope.
 
 ---
 
+## [2026-02-10] Enforcement Hardening (v1.3.0)
+
+**Summary:** Transitioned FORGE from declarative canon to enforced governance. Added Law 5a (Preconditions Are Hard Stops), automatic @G structural verification after @C, Sacred Four zero-test enforcement, explicit external project waiver semantics, auth architecture ADR gates, stakeholder model requirements, and a 14-rule enforcement matrix. Backward-compatible via grandfathering policy for existing projects.
+
+**Decision:** forge-system-hardening (via forge-rd pipeline, canon mode)
+
+**Tag:** `v1.3.0`
+
+**Files touched:**
+- `core/forge-core.md` (modified v1.2 → v1.3) — Law 5a, Explicit Architecture Decisions rule
+- `core/forge-operations.md` (modified v1.1 → v1.3) — @G structural verification, zero-test enforcement, enforcement matrix, grandfathering policy
+- `agents/forge-e-operating-guide.md` (modified) — Pre-flight verification, PR packet exemptions
+- `agents/forge-g-operating-guide.md` (modified) — Structural verification after @C, transition-specific validation
+- `agents/forge-o-operating-guide.md` (modified) — Auth architecture + test architecture completion gates
+- `agents/forge-product-strategist-guide.md` (modified) — Actor classification + stakeholder decision gates
+- `templates/forge-template-testing-requirements.md` (modified) — Zero-test clarification, PR-000 exception
+- `templates/forge-template-repository-scaffold.md` (modified) — Required structure verification
+- `.claude/skills/forge-{a,b,c,e,f,g,o,r}/SKILL.md` (8 files modified) — Universal startup check, waiver semantics
+- `template/project/docs/` (4 new templates) — STAKEHOLDER-MODEL, auth-architecture ADR, test-infrastructure, preflight-checklist
+
+**Impact:** Public canon — enforcement upgrade. All new projects subject to hardened gates. Existing projects grandfathered (except zero-test, which is retroactive).
+
+### Added
+- **Law 5a: Preconditions Are Hard Stops** — agents must verify inputs before producing outputs
+- **@G Structural Verification** — automatic 13-item scaffold check after @C, before @F
+- **Enforcement Matrix** — 14 rules with agent, trigger, failure mode, and bypass documented
+- **Grandfathering Policy** — existing projects exempt from new gates (effective 2026-02-10)
+- **Universal Startup Check** — all 8 agents verify project location + FORGE-AUTONOMY.yml
+- **PR-000 Exception** — `is_test_setup: true` flag for test infrastructure bootstrap
+- 4 project scaffold templates (STAKEHOLDER-MODEL, auth ADR, test-infrastructure, preflight-checklist)
+
+### Changed
+- Sacred Four zero-test: zero tests is now a FAILURE, not a pass (retroactive, no grace period)
+- External project waiver: `external_project: true` waives location only, not governance
+- PR packet: exemptions for PR-000 and docs-only PRs
+- @F completion gate: requires explicit auth plane assignments
+- @O completion gate: requires auth ADR (multi-user/role) + test architecture
+- @E pre-flight: 4 sequential checks before accepting any handoff
+
+---
+
 ## [2026-02-07] Agent Packaging & Distribution (v1.3.1)
 
 **Summary:** Made FORGE self-contained and distributable by shipping 10 agents and 9 skills inside the repository at `.claude/agents/` and `.claude/skills/`. Cloners now receive all FORGE agents with zero setup (Mode A). Added export pipeline (`bin/forge-export`) for one-way sync with scrubbing, optional install script (`bin/forge-install`) with per-file confirmation, and @O/@R operating guides.
