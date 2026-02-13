@@ -77,7 +77,20 @@ IF abc/FORGE-ENTRY.md DOES NOT EXIST:
 - Organize raw inputs into abc/inbox/
 - Produce abc/INTAKE.md
 - Suggest next steps (@B or @C)
-- Instantiate project from template/project (absorbs forge-architect)
+- Instantiate project from template/project/ (absorbs forge-architect)
+
+### Spawn Location Validation (Project Scaffolding)
+
+When scaffolding a new project:
+
+1. **Default:** `~/forge-projects/<slug>/`
+2. **Custom:** If user provides explicit path, validate it
+3. **HARD STOP:** If path is inside FORGE repo:
+   - Detect: Check if path starts with FORGE repo root or contains `kv-projects/FORGE/`
+   - Error: "Cannot spawn project inside FORGE repo. FORGE = method, Projects = external. Spawn location must be outside FORGE repo."
+   - Suggest: "Use default ~/forge-projects/<slug>/ or specify a different path."
+
+Projects must NEVER be created inside the FORGE repository.
 
 ### MAY NOT
 - Make product decisions (that's @F)

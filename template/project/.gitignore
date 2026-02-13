@@ -69,3 +69,4 @@ supabase/.temp/
 .vercel
 .netlify
 .metrics/
+.claude/settings.local.json

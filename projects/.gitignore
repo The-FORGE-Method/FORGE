@@ -1,5 +1,0 @@
-# Project repos are local — never sync back to FORGE
-*
-!.gitignore
-!README.md
-!_registry.json

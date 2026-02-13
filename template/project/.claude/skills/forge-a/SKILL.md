@@ -1,5 +1,3 @@
-<!-- Generated from .claude/skills/forge-a/SKILL.md — do not edit directly, regenerate via bin/forge-export -->
-
 ---
 name: forge-a
 description: "Invoke @A (Acquire) — scaffold workspace, organize inputs, produce INTAKE.md. Pre-FORGE agent for project intake."
@@ -17,6 +15,24 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 ## Purpose
 
 Turn "idea chaos" into an organized workspace. @A is the first agent a user interacts with when starting a new project. It scaffolds the project structure, organizes raw inputs, and produces `abc/INTAKE.md`.
+
+## Universal Startup Check (MANDATORY — All Agents)
+
+Before proceeding, verify project governance:
+
+1. **Is this project under FORGE/projects/<slug>/?**
+   - YES → Proceed normally
+   - NO → Check FORGE-AUTONOMY.yml for `external_project: true` waiver
+     - Waiver exists → WARN: "Project is external. Location check waived. All other FORGE enforcement (structural verification, Sacred Four, auth gates, PR packets) still applies."
+     - No waiver → HARD STOP: "Project is not under FORGE governance. Cannot proceed."
+
+2. **Does FORGE-AUTONOMY.yml exist?**
+   - YES → Read and apply tier configuration
+   - NO → HARD STOP: "Missing governance policy. Cannot determine autonomy tier."
+
+**Enforcement:** This check runs BEFORE any agent-specific work begins.
+
+**Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
 
 ## Gating Logic
 
@@ -61,20 +77,7 @@ IF abc/FORGE-ENTRY.md DOES NOT EXIST:
 - Organize raw inputs into abc/inbox/
 - Produce abc/INTAKE.md
 - Suggest next steps (@B or @C)
-- Instantiate project from template/project/ (absorbs forge-architect)
-
-### Spawn Location Validation (Project Scaffolding)
-
-When scaffolding a new project:
-
-1. **Default:** `~/forge-projects/<slug>/`
-2. **Custom:** If user provides explicit path, validate it
-3. **HARD STOP:** If path is inside FORGE repo:
-   - Detect: Check if path starts with FORGE repo root or contains `kv-projects/FORGE/`
-   - Error: "Cannot spawn project inside FORGE repo. FORGE = method, Projects = external. Spawn location must be outside FORGE repo."
-   - Suggest: "Use default ~/forge-projects/<slug>/ or specify a different path."
-
-Projects must NEVER be created inside the FORGE repository.
+- Instantiate project from template/project (absorbs forge-architect)
 
 ### MAY NOT
 - Make product decisions (that's @F)

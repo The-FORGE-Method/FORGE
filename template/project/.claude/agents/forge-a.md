@@ -1,4 +1,4 @@
-<!-- Generated from .claude/skills/forge-a/SKILL.md — do not edit directly, regenerate via bin/forge-export -->
+<!-- FORGE Agent Pack — vendored with project. Source: FORGE/.claude/agents/forge-a.md -->
 
 ---
 name: forge-a
@@ -61,20 +61,6 @@ IF abc/FORGE-ENTRY.md DOES NOT EXIST:
 - Organize raw inputs into abc/inbox/
 - Produce abc/INTAKE.md
 - Suggest next steps (@B or @C)
-- Instantiate project from template/project/ (absorbs forge-architect)
-
-### Spawn Location Validation (Project Scaffolding)
-
-When scaffolding a new project:
-
-1. **Default:** `~/forge-projects/<slug>/`
-2. **Custom:** If user provides explicit path, validate it
-3. **HARD STOP:** If path is inside FORGE repo:
-   - Detect: Check if path starts with FORGE repo root or contains `kv-projects/FORGE/`
-   - Error: "Cannot spawn project inside FORGE repo. FORGE = method, Projects = external. Spawn location must be outside FORGE repo."
-   - Suggest: "Use default ~/forge-projects/<slug>/ or specify a different path."
-
-Projects must NEVER be created inside the FORGE repository.
 
 ### MAY NOT
 - Make product decisions (that's @F)
@@ -127,4 +113,4 @@ In Tier 0, @G will refuse and instruct human. This is expected behavior.
 ---
 
 *@A absorbs project scaffolding from the deprecated forge-architect agent.*
-*Operating guide: method/agents/forge-a-operating-guide.md*
+*Operating guide: https://github.com/[org]/FORGE/blob/main/method/agents/forge-a-operating-guide.md*

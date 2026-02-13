@@ -6,6 +6,7 @@
 
 version: 0.2
 template_version: "2.0"
+external_project: true
 
 # Autonomy tier determines routing behavior
 # Tier 0: @G refuses transitions, instructs human (default)

@@ -126,25 +126,37 @@ npm run typecheck && npm run lint && npm run test && npm run build
 
 ## Project Structure
 
-Projects live in `projects/` and follow this layout:
+FORGE projects live OUTSIDE the FORGE repo (hard separation: methodology vs work). When you spawn a project via @A, it creates a new directory:
 
 ```
-projects/<slug>/
-├── abc/                        Pre-FORGE: Acquire, Brief, Commit
-│   ├── INTAKE.md               @A output
-│   ├── BRIEF.md                @B output (optional)
-│   └── FORGE-ENTRY.md          @C output (gate artifact)
+~/forge-projects/<slug>/          Default spawn location (configurable)
+├── .claude/                      Vendored FORGE agent pack
+│   ├── agents/                   9 agents (forge-a through forge-r, decision-logger)
+│   ├── skills/                   8 skills (forge-a through forge-r)
+│   ├── VERSION                   Agent pack version tracking
+│   ├── README.md                 Roster + upgrade docs
+│   └── settings.json             Baseline permissions
+├── abc/                          Pre-FORGE: Acquire, Brief, Commit
+│   ├── INTAKE.md                 @A output
+│   ├── BRIEF.md                  @B output (optional)
+│   └── FORGE-ENTRY.md            @C output (gate artifact)
 ├── docs/
 │   └── constitution/
-│       ├── PRODUCT.md           Product intent
-│       ├── TECH.md              Technical architecture
-│       └── GOVERNANCE.md        Project governance
-├── inbox/                       Feature requests for the project
-├── src/                         Source code
-└── tests/                       Tests
+│       ├── PRODUCT.md            Product intent
+│       ├── TECH.md               Technical architecture
+│       └── GOVERNANCE.md         Project governance
+├── _forge/inbox/active/          Active work packets
+├── _forge/inbox/done/            Completed work packets (ledger)
+├── src/                          Source code
+└── tests/                        Tests
 ```
 
-Use `template/project/` as the scaffold for new projects, or let `@A` handle it.
+**Important:** Projects must NOT live inside the FORGE repo. This ensures:
+- FORGE repo remains clean (method + tooling only)
+- Projects have independent git history
+- Teams can clone projects without the FORGE repo
+
+Use `template/project/` as the scaffold. `@A` handles spawn + instantiation.
 
 ---
 
@@ -152,15 +164,16 @@ Use `template/project/` as the scaffold for new projects, or let `@A` handle it.
 
 | Directory | Purpose | Status |
 |-----------|---------|--------|
-| `.claude/` | Agent + Skill definitions (auto-loaded) | Operational |
+| `.claude/` | Agent + Skill definitions (FORGE-repo + vendored source) | Operational |
 | `method/` | Canonical FORGE methodology | Canon |
 | `method/core/` | Core docs — highest authority | Canon (protected) |
 | `method/agents/` | Agent operating guides | Canon |
 | `method/templates/` | Reusable templates | Operational |
-| `template/project/` | Scaffold for new projects | Operational |
-| `projects/` | Your FORGE-governed projects | User space |
+| `template/project/` | Scaffold for new projects (includes vendored .claude/) | Operational |
 | `_workspace/` | R&D workspace for evolving FORGE | Non-canon |
-| `bin/` | forge-export, forge-install | Tooling |
+| `bin/` | forge-export, forge-install, forge-sync | Tooling |
+
+**Note:** `projects/` was removed. Projects live outside FORGE repo (e.g., `~/forge-projects/`).
 
 ### Canon Hierarchy
 
@@ -215,13 +228,18 @@ Create `.claude/settings.local.json` (gitignored) to extend permissions:
 }
 ```
 
-### Global Install
+### Global Install (Optional)
 
-For FORGE agents available in any project:
+Spawned projects bundle agents in `.claude/`, so global install is optional. Useful for:
+- Working outside FORGE projects
+- Fallback when a project lacks vendored agents
+- Personal preference for global availability
 
 ```bash
 ./bin/forge-install
 ```
+
+**Agent resolution order:** Project `.claude/` > Global `~/.claude/`
 
 ---
 

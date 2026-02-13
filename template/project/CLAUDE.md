@@ -206,6 +206,29 @@ FORGE uses 4 progressive gates to ensure readiness at each phase:
 
 ---
 
+## FORGE Agents (Bundled)
+
+This project includes FORGE agents in `.claude/` directory. All agents are immediately available -- no setup required.
+
+**Invoke agents:**
+- Natural language: "Catch me up" → @G
+- Explicit role: `@G catch me up` → forces @G
+- Skill command: `/forge-g` → direct invocation
+
+**Agent roster:**
+- **Pre-FORGE:** @A (Acquire), @B (Brief), @C (Commit)
+- **FORGE Lifecycle:** @F (Frame), @O (Orchestrate), @R (Refine), @G (Govern), @E (Execute)
+- **Supporting:** decision-logger
+
+**Customization:**
+- Local agents: `.claude/agents/` (edit directly or use `.claude/settings.local.json`)
+- Local skills: `.claude/skills/`
+- Add specialists: Copy agent .md and skill/ folders to `.claude/`, restart Claude Code
+
+See `.claude/README.md` for upgrade workflow and specialist agent installation.
+
+---
+
 ## Technical Stack
 
 | Layer | Technology |

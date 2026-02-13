@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# bin/forge-sync — Update project-local agent pack to latest FORGE version
+# Usage: ./bin/forge-sync /path/to/project
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FORGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 /path/to/project" >&2
+    exit 1
+fi
+
+PROJECT_ROOT="$1"
+if [[ ! -d "$PROJECT_ROOT" ]]; then
+    echo "ERROR: Project directory not found: $PROJECT_ROOT" >&2
+    exit 1
+fi
+
+if [[ ! -d "$PROJECT_ROOT/.claude" ]]; then
+    echo "ERROR: Project does not have .claude/ directory. Not a FORGE project?" >&2
+    exit 1
+fi
+
+# Read current version
+CURRENT_VERSION="unknown"
+if [[ -f "$PROJECT_ROOT/.claude/VERSION" ]]; then
+    CURRENT_VERSION=$(grep "^FORGE_AGENT_PACK_VERSION=" "$PROJECT_ROOT/.claude/VERSION" | cut -d= -f2)
+fi
+
+# Read FORGE template version
+FORGE_VERSION="unknown"
+if [[ -f "$FORGE_ROOT/template/project/.claude/VERSION" ]]; then
+    FORGE_VERSION=$(grep "^FORGE_AGENT_PACK_VERSION=" "$FORGE_ROOT/template/project/.claude/VERSION" | cut -d= -f2)
+fi
+
+echo "=== FORGE Agent Pack Sync ==="
+echo "Project: $PROJECT_ROOT"
+echo "Current version: $CURRENT_VERSION"
+echo "FORGE version: $FORGE_VERSION"
+echo ""
+
+if [[ "$CURRENT_VERSION" == "$FORGE_VERSION" ]]; then
+    echo "Project is already up-to-date."
+    read -rp "Force sync anyway? [y/N] " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        echo "Aborted."
+        exit 0
+    fi
+fi
+
+echo "WARNING: This will overwrite project agents/skills with FORGE template versions."
+echo "If you've customized agents, back up .claude/ first."
+echo ""
+read -rp "Continue? [y/N] " confirm
+if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    echo "Aborted."
+    exit 0
+fi
+
+# Sync agents
+echo ""
+echo "Syncing agents..."
+rsync -av --delete \
+    "$FORGE_ROOT/template/project/.claude/agents/" \
+    "$PROJECT_ROOT/.claude/agents/"
+
+# Sync skills
+echo ""
+echo "Syncing skills..."
+rsync -av --delete \
+    "$FORGE_ROOT/template/project/.claude/skills/" \
+    "$PROJECT_ROOT/.claude/skills/"
+
+# Sync VERSION
+echo ""
+echo "Updating VERSION..."
+cp "$FORGE_ROOT/template/project/.claude/VERSION" "$PROJECT_ROOT/.claude/VERSION"
+
+# Sync README (with prompt)
+if [[ -f "$PROJECT_ROOT/.claude/README.md" ]]; then
+    read -rp "Overwrite .claude/README.md? [y/N] " ans
+    if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+        cp "$FORGE_ROOT/template/project/.claude/README.md" "$PROJECT_ROOT/.claude/README.md"
+        echo "  README.md updated"
+    else
+        echo "  Skipped README.md"
+    fi
+else
+    cp "$FORGE_ROOT/template/project/.claude/README.md" "$PROJECT_ROOT/.claude/README.md"
+    echo "  README.md created"
+fi
+
+# settings.json — don't overwrite (project-specific)
+echo ""
+echo "NOTE: settings.json NOT synced (project-specific)."
+echo "If FORGE template added new skills, manually add to .claude/settings.json:"
+echo "  grep 'Skill(' $FORGE_ROOT/template/project/.claude/settings.json"
+
+echo ""
+echo "=== Sync Complete ==="
+echo "Updated to version: $FORGE_VERSION"
+echo ""
+echo "Next steps:"
+echo "1. Review changes: git status"
+echo "2. Test agents: restart Claude Code, invoke /forge-g"
+echo "3. Commit if satisfied: git add .claude/ && git commit -m 'Sync FORGE agent pack to $FORGE_VERSION'"
