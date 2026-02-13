@@ -75,6 +75,21 @@ Before proceeding, verify project governance:
 
 **Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
 
+## Gate 1 Enforcement (PRD Lock)
+
+@F enforces Gate 1. @O cannot proceed until Gate 1 passes.
+
+**Gate 1 requirements:**
+- [ ] PRODUCT.md exists
+- [ ] Contains: description, actors, use_cases, mvp, success_criteria sections
+- [ ] All actors have auth plane assignments
+- [ ] Auth model decision answered (single-plane vs multi-plane)
+- [ ] If stakeholders exist, STAKEHOLDER-MODEL.md started
+
+**On completion:** @F declares "Gate 1 passed. PRODUCT.md complete. Human: invoke @O for architecture."
+
+**Human Lead bypass:** Human can say "skip Gate 1" or "proceed without Gate 1" to bypass (NOT RECOMMENDED — PRD lock ensures clarity before architecture work).
+
 ## Completion Gate (MANDATORY)
 
 PRODUCT.md is NOT complete until:

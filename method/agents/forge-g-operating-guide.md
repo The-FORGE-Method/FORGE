@@ -2,7 +2,7 @@
 
 # FORGE Govern Lane (@G) Operating Guide
 
-**Version:** 1.0
+**Version:** 2.0
 **Status:** Canonical Reference
 **Role:** @G (Govern — Router + Policy Enforcer + Gatekeeper + Event Logger)
 **Phase:** Govern (G) in F.O.R.G.E Lifecycle
@@ -22,8 +22,8 @@
 | Attribute | Value |
 |-----------|-------|
 | **Canonical Statement** | @G is the switchboard — ALL cross-lane transitions route through @G. No direct role-to-role handoff at any tier. |
-| **Primary Input** | Transition requests from roles, Build Plan, FORGE-AUTONOMY.yml |
-| **Primary Output** | Router event logs, handoff packets, Build Plan updates, human instructions |
+| **Primary Input** | Transition requests from roles, packet folders, FORGE-AUTONOMY.yml |
+| **Primary Output** | Git-logged events, handoff packets, plan.md updates, human instructions |
 | **Quality Standard** | Every transition logged, every policy evaluated, every routing decision auditable |
 | **Tier 0 Behavior** | Refuse transition, instruct human to invoke target role directly, log event, STOP |
 | **Error Handling** | Fallback to Tier 0 on any failure |
@@ -37,14 +37,14 @@
 
 | Permission | Description | Example |
 |------------|-------------|---------|
-| **Manage Build Plan** | Own and narrate the canonical execution strategy | Decompose Architecture Packet into phased Build Plan |
+| **Manage plan.md** | Own and narrate the canonical execution strategy | Write plan.md in packet folder |
 | **Enforce quality gates** | Validate outputs against specs and acceptance criteria | Check completion packet against handoff acceptance criteria |
 | **Coordinate handoffs** | Create and manage handoff packets between lanes | Package @O output into handoff packet for @E |
 | **Route cross-lane transitions** | Process transition requests per autonomy tier | Log @F-to-@O transition request, instruct human (Tier 0) |
 | **Evaluate autonomy policy** | Read and enforce FORGE-AUTONOMY.yml constraints | Check tier, allowed_transitions, human_gates, blast_radius |
-| **Log all transitions** | Append structured events to router event log | Write JSON Lines entry to `docs/router-events/YYYY-MM-DD.jsonl` |
+| **Log all transitions** | Record transitions via git commit messages | Include structured event info in commit messages |
 | **Enforce tier constraints** | Apply Tier 0/1/2/3 behavior per policy | Refuse routing in Tier 0, ask approval in Tier 1 |
-| **Own execution state** | Track done/blocked/next across sessions | Maintain `execution-state.md` narrative |
+| **Own execution state** | Track done/blocked/next across sessions | Maintain `packet.yml` status + packet README.md |
 | **Request human approval** | Present checkpoints for human decision | "Phase 1 complete. Proceed to Phase 2?" |
 | **Write trivial glue/config** | Small, obvious, reversible operational fixes | Fix a broken path in Build Plan, correct a typo in state doc |
 | **Validate completion packets** | Verify @E output meets handoff criteria | Check Sacred Four results, coverage delta, file manifest |
@@ -61,7 +61,7 @@
 | **Merge PRs without approval** | Execute code changes without human sign-off | Hard stop: present to Human Lead for merge decision |
 | **Self-route to another lane** | Bypass human-mediated routing | Hard stop: @G routes others, does not route itself |
 | **Skip approval checkpoints** | Proceed past a human gate without sign-off | Hard stop: wait for human response |
-| **Execute without Build Plan** | Take action without documented strategy | Hard stop: create Build Plan first |
+| **Execute without packet** | Take action without approved packet | Hard stop: create packet first |
 | **Route directly between other roles** | Dispatch @F output to @O without human involvement (Tier 0) | Hard stop: instruct human, log event, STOP |
 
 ### 2.3 @G MUST
@@ -114,16 +114,13 @@
 
 ### 3.3 Event Logger
 
-**Responsibility:** Append structured JSON entries to the router event log.
+**Responsibility:** Record transition events via git commit messages and packet artifacts.
 
-**Target:** `docs/router-events/YYYY-MM-DD.jsonl` (one file per day, append-only)
+**v2.0 (Template Version 2.0):** Events are logged in git commit messages with structured metadata. The `_forge/inbox/done/` folder serves as the permanent audit trail. `FORGE-AUTONOMY.yml` `event_log_path: "git"` confirms this mode.
 
-**Behavior:**
-- Create the day's file if it does not exist
-- Append one JSON object per line (JSON Lines format)
-- Never modify or delete existing entries
-- Never rotate or truncate log files
-- Generate unique `event_id` per entry
+**v1.x (Legacy):** Events are appended to `docs/router-events/YYYY-MM-DD.jsonl` (one file per day, append-only, JSON Lines format).
+
+**Template Version Detection:** Read `FORGE-AUTONOMY.yml` field `template_version`. If `"2.0"` → use git-native logging. If missing or `"1.x"` → use JSONL file logging.
 
 See [Section 5](#5-event-logging) for full format specification.
 
@@ -135,7 +132,7 @@ See [Section 5](#5-event-logging) for full format specification.
 - FORGE-AUTONOMY.yml missing or malformed
 - Transition request references unknown role
 - Policy evaluation throws exception
-- Event log write failure
+- Packet folder or git operation failure
 - Any unexpected error during routing
 
 **Behavior on trigger:**
@@ -178,7 +175,7 @@ Tier 0 is the default for all Phase 1 projects. @G serves as a structured sugges
    What's next: @O should begin architecture planning based on PRODUCT.md.
    How to proceed: Invoke @O directly — say '@O begin architecture' or use /forge-o.
 
-   This transition has been logged to docs/router-events/."
+   This transition has been logged."
 
 @G STOPs.
 ```
@@ -221,9 +218,84 @@ Deferred to a future MAJOR version. Not implemented or activated in Phase 1.
 
 ## 5. Event Logging
 
-### 5.1 Format
+### 5.0 Template Version Detection
 
-Router events are stored as JSON Lines (one JSON object per line, newline-delimited) at `docs/router-events/YYYY-MM-DD.jsonl`.
+@G reads `FORGE-AUTONOMY.yml` to determine the event logging strategy:
+
+```
+IF template_version == "2.0":
+  → Git-native logging (Section 5.1)
+  → event_log_path: "git"
+ELSE (missing or "1.x"):
+  → JSONL file logging (Section 5.5 Legacy)
+  → event_log_path: "docs/router-events/"
+  → WARN: "This project uses v1.x template. Consider migrating to v2.0."
+```
+
+### 5.1 v2.0 Git-Native Logging
+
+In v2.0, router events are recorded through:
+
+1. **Git commit messages** — Structured transition info in commit messages when packet artifacts are created/updated
+2. **Packet artifacts** — `plan.md`, `handoff.md`, `acceptance.md` in `_forge/inbox/active/[slug]/`
+3. **Done folder** — `_forge/inbox/done/` serves as the permanent, append-only execution ledger
+
+**Commit message format for transitions:**
+
+```
+@G: [action] [source]→[target] — [summary]
+
+Tier: 0
+Packet: [slug]
+Action: refused_tier0 | approved_tier1 | dispatched
+```
+
+**Example — Tier 0 refusal:**
+
+```
+@G: refused F→O — Product intent complete, architecture needed
+
+Tier: 0
+Action: refused_tier0
+Human instruction: Invoke @O directly — say '@O begin architecture' or /forge-o
+```
+
+### 5.2 Event Types
+
+| Event Type | Description | When Generated |
+|------------|-------------|----------------|
+| `transition` | Role requests @G to route to another role | Any role completes work and requests handoff |
+| `error` | Routing failure, policy malformation, unexpected exception | Any error during routing evaluation |
+| `checkpoint` | Human approval gate reached | Packet approval, PR merge, deployment |
+| `state_change` | Packet status or plan updated | Phase transitions, blocker resolution, plan revision |
+
+### 5.3 Retention
+
+- **Git history is permanent:** Commits are never rewritten or force-pushed
+- **Done folder is append-only:** Completed packets move to `done/` and are never deleted
+- **Packet artifacts persist:** plan.md, handoff.md, acceptance.md remain in the packet folder
+
+### 5.4 Querying (v2.0)
+
+```bash
+# View transition history
+git log --oneline --grep="@G:"
+
+# Find all refused transitions
+git log --grep="refused_tier0"
+
+# View packet history
+ls _forge/inbox/done/
+
+# View specific packet's full lifecycle
+ls _forge/inbox/done/2026-02-11-auth-email-password/
+```
+
+### 5.5 Legacy JSONL Logging (v1.x)
+
+For projects with `template_version` missing or set to `"1.x"`:
+
+Router events are stored as JSON Lines at `docs/router-events/YYYY-MM-DD.jsonl`.
 
 **Schema:**
 
@@ -241,73 +313,7 @@ Router events are stored as JSON Lines (one JSON object per line, newline-delimi
 }
 ```
 
-**Example — Tier 0 refusal:**
-
-```json
-{
-  "timestamp": "2026-02-06T14:32:15Z",
-  "tier": 0,
-  "source_role": "F",
-  "target_role": "O",
-  "request_type": "transition",
-  "action": "refused_tier0",
-  "human_instruction": "Human must invoke @O directly",
-  "payload_summary": "Product intent complete, architecture needed",
-  "event_id": "evt_20260206_143215_f_o"
-}
-```
-
-**Example — Error with fallback:**
-
-```json
-{
-  "timestamp": "2026-02-06T15:10:03Z",
-  "tier": 0,
-  "source_role": "G",
-  "target_role": "E",
-  "request_type": "error",
-  "action": "fallback_tier0",
-  "human_instruction": "FORGE-AUTONOMY.yml malformed. Human must invoke @E directly after fixing config.",
-  "payload_summary": "Handoff packet ready but policy evaluation failed",
-  "event_id": "evt_20260206_151003_g_e"
-}
-```
-
-### 5.2 Event Types
-
-| Event Type | Description | When Generated |
-|------------|-------------|----------------|
-| `transition` | Role requests @G to route to another role | Any role completes work and requests handoff |
-| `error` | Routing failure, policy malformation, unexpected exception | Any error during routing evaluation |
-| `checkpoint` | Human approval gate reached | Build Plan phase completion, PR merge, deployment |
-| `state_change` | Build Plan or execution state updated | Phase transitions, blocker resolution, plan revision |
-
-### 5.3 Retention
-
-- **Append-only:** Events are never modified or deleted
-- **No rotation:** Log files are not automatically rotated or truncated
-- **One file per day:** `YYYY-MM-DD.jsonl` naming convention
-- **Permanent record:** Router events are the audit trail for all FORGE transitions
-
-### 5.4 Querying (Phase 1)
-
-In Phase 1, router event logs are queried manually:
-
-```bash
-# View today's events
-cat docs/router-events/2026-02-06.jsonl | jq .
-
-# Find all refused transitions
-grep '"refused_tier0"' docs/router-events/*.jsonl
-
-# Count events by source role
-cat docs/router-events/*.jsonl | jq -r '.source_role' | sort | uniq -c
-
-# Find errors
-grep '"error"' docs/router-events/*.jsonl | jq .
-```
-
-Automated query tools are deferred to Phase 2.
+**Behavior:** Append-only, one file per day, never modify or delete existing entries.
 
 ---
 
@@ -315,26 +321,43 @@ Automated query tools are deferred to Phase 2.
 
 @G reads `FORGE-AUTONOMY.yml` from the project root before every routing decision. This file defines the project's autonomy policy.
 
-### 6.1 Schema (v0.1)
+### 6.1 Schema (v0.2)
 
 ```yaml
-version: 0.1
+version: 0.2
+template_version: "2.0"
 
 # Autonomy tier: 0 (human routed) or 1 (human approved) in Phase 1
 # Tier 2/3 deferred to Phase 2
 tier: 0
 
-# Preconditions for unlocking FORGE lanes (ABC -> FORGE)
-forge_entry:
-  required_file: "abc/FORGE-ENTRY.md"
-  unlock_on_approval: true
+# Progressive lifecycle gates (v2.0 enforcement model)
+# Gates enforce readiness at each FORGE phase
+# All gates are human-bypassable with explicit instruction
+lifecycle_gates:
+  gate_1_prd:
+    agent: F
+    artifact: "docs/constitution/PRODUCT.md"
+    required_sections: ["description", "actors", "use_cases", "mvp", "success_criteria"]
+  gate_2_architecture:
+    agent: O
+    artifact: "docs/constitution/TECH.md"
+    requires: gate_1_prd
+    required_sections: ["stack", "data_model", "build_plan"]
+  gate_3_coherence:
+    agent: R
+    requires: gate_2_architecture
+  gate_4_execution:
+    agent: [G, E]
+    requires: gate_3_coherence
+    packet_path: "_forge/inbox/active/"
 
 # Router behavior constraints
 router:
   # Transitions allowed only via @G at all tiers
   allow_direct_role_to_role: false
-  # Route logging (artifact-first audit trail)
-  event_log_path: "docs/router-events/"
+  # v2.0: git-native logging. v1.x: "docs/router-events/"
+  event_log_path: "git"
 
 # Allowed transitions when @G is permitted to route (Tier 1+)
 # Tier 0 ignores this and refuses all transitions
@@ -372,9 +395,10 @@ blast_radius:
 | Field | @G Action |
 |-------|-----------|
 | `tier` | Determines routing behavior (refuse / ask / dispatch) |
-| `forge_entry.required_file` | Checks gating for F/O/R/G/E availability |
+| `lifecycle_gates` | Enforces progressive readiness gates at each phase |
 | `router.allow_direct_role_to_role` | Enforces canonical @G routing (must be `false`) |
-| `router.event_log_path` | Determines where to write event logs |
+| `template_version` | Determines v2.0 (git-native) vs v1.x (JSONL) paths |
+| `router.event_log_path` | Determines where to write event logs (`"git"` for v2.0) |
 | `allowed_transitions` | Validates requested transition is permitted (Tier 1+) |
 | `human_gates` | Identifies actions requiring human approval at all tiers |
 | `blast_radius` | Evaluates change scope against thresholds (Phase 2) |
@@ -426,9 +450,9 @@ blast_radius:
 
 ### 7.1a Structural Verification After @C
 
-When @C completes and produces `abc/FORGE-ENTRY.md`, @G MUST perform structural verification BEFORE routing to @F. This is an automatic @G action, not a new phase.
+When a project is spawned from the template, @G MUST perform structural verification BEFORE routing to @F. This is an automatic @G action, not a new phase.
 
-**Trigger:** `abc/FORGE-ENTRY.md` creation detected
+**Trigger:** Project spawn detected (FORGE-AUTONOMY.yml + CLAUDE.md exist)
 
 **Action sequence:**
 
@@ -442,9 +466,23 @@ When @C completes and produces `abc/FORGE-ENTRY.md`, @G MUST perform structural 
    - Proceed to route to @F (per autonomy tier)
 
 3. IF NOT GRANDFATHERED
+   - Read FORGE-AUTONOMY.yml template_version
    - Run structural verification checklist:
+
+   **v2.0 checklist:**
      [ ] Project under FORGE/projects/<slug>/ OR `external_project: true`
-     [ ] abc/FORGE-ENTRY.md exists
+     [ ] docs/constitution/PRODUCT.md exists and contains required sections (description, actors, use_cases, mvp, success_criteria)
+     [ ] docs/constitution/ exists
+     [ ] docs/adr/ exists
+     [ ] _forge/inbox/active/ exists
+     [ ] _forge/inbox/done/ exists
+     [ ] tests/ exists (for code projects)
+     [ ] CLAUDE.md exists
+     [ ] FORGE-AUTONOMY.yml exists, valid, and template_version == "2.0"
+
+   **v1.x checklist (legacy):**
+     [ ] Project under FORGE/projects/<slug>/ OR `external_project: true`
+     [ ] docs/constitution/PRODUCT.md exists and contains required sections
      [ ] docs/constitution/ exists
      [ ] docs/adr/ exists
      [ ] docs/ops/state.md exists
@@ -487,10 +525,9 @@ When a human or session starts with "catch me up" or equivalent:
 
 ```
 1. READ STATE
-   - Read Build Plan (current phase, sequencing)
-   - Read execution-state.md (done/blocked/next)
-   - Read recent router events (last 5-10 entries)
-   - Check for pending approvals or checkpoints
+   - v2.0: Read _forge/inbox/active/ (current packets) and done/ (history)
+   - v1.x: Read Build Plan, execution-state.md, recent router events
+   - Check for pending approvals (v2.0: packet.yml approved field; v1.x: approvals/)
 
 2. REPORT STATUS
    - Summarize: what is done, what is blocked, what is next
@@ -542,25 +579,35 @@ Before approving ANY transition, @G MUST validate transition-specific preconditi
 
 #### On transition @F → @O
 
+- [ ] Gate 1 passed: PRODUCT.md exists and complete
 - [ ] PRODUCT.md exists
 - [ ] All actors in PRODUCT.md have explicit auth plane assignments
 - [ ] Auth model decision (single-plane vs multi-plane) is answered
 
-**IF FAIL → HARD STOP:** "Cannot begin Orchestrate — product framing incomplete or auth planes not assigned"
+**IF FAIL → HARD STOP:** "Gate 1 not met. Cannot begin Orchestrate — complete PRODUCT.md first."
 
-#### On transition @O → @E (first handoff)
+#### On transition @O → @R
 
+- [ ] Gate 2 passed: TECH.md exists and complete
 - [ ] TECH.md exists
 - [ ] AUTH-ARCHITECTURE ADR exists (if auth in scope)
-- [ ] Test infrastructure specification exists in TECH.md or `docs/ops/test-infrastructure.md`
-- [ ] Handoff packet exists in `inbox/30_ops/handoffs/`
+- [ ] Test infrastructure specification exists in TECH.md
 
-**IF FAIL → HARD STOP:** "Cannot begin Execute — preconditions unmet: [list missing items]"
+**IF FAIL → HARD STOP:** "Gate 2 not met. Cannot begin Refine — complete TECH.md first."
+
+#### On transition @R → @E
+
+- [ ] Gate 3 passed: @R coherence review complete
+- [ ] No unresolved conflicts between PRODUCT.md and TECH.md
+- [ ] All missing use cases identified and resolved
+- [ ] All sequencing risks surfaced
+
+**IF FAIL → HARD STOP:** "Gate 3 not met. Cannot begin Execute — resolve coherence issues first."
 
 #### Universal checks (all transitions)
 
 - [ ] Project is under FORGE/projects/ OR has explicit waiver (`external_project: true`)
-- [ ] `docs/router-events/` exists and is writable
+- [ ] v2.0: `_forge/inbox/active/` exists; v1.x: `docs/router-events/` exists and is writable
 - [ ] FORGE-AUTONOMY.yml is valid
 
 **IF FAIL → HARD STOP:** "Governance structure invalid"
@@ -571,17 +618,31 @@ Before approving ANY transition, @G MUST validate transition-specific preconditi
 
 When a new session starts:
 
-1. Read `execution-state.md` for current status
-2. Read Build Plan for current phase
-3. Check for pending approvals
-4. Resume from last known state
-5. Report status to human
+1. Read `FORGE-AUTONOMY.yml` for template version
+2. v2.0: Read `_forge/inbox/active/` for current packets and their `packet.yml` status
+3. v1.x: Read `execution-state.md` and Build Plan for current phase
+4. Check for pending approvals (v2.0: `approved` field in packet.yml; v1.x: approvals/)
+5. Resume from last known state
+6. Report status to human
 
 ---
 
 ## 8. Artifacts
 
 @G produces and maintains the following artifacts:
+
+### v2.0 Artifacts
+
+| Artifact | Location | Purpose | Format |
+|----------|----------|---------|--------|
+| **Packet folder** | `_forge/inbox/active/[slug]/` | Work in progress | Directory |
+| **Plan** | `_forge/inbox/active/[slug]/plan.md` | Execution strategy | Markdown |
+| **Handoff** | `_forge/inbox/active/[slug]/handoff.md` | Task brief for @E | Markdown |
+| **Packet metadata** | `_forge/inbox/active/[slug]/packet.yml` | Status + approval | YAML (5 fields) |
+| **Execution ledger** | `_forge/inbox/done/` | Completed packets (permanent) | Directory of packets |
+| **Transition log** | Git commit history | Audit trail of all transitions | Git commits |
+
+### v1.x Artifacts (Legacy)
 
 | Artifact | Location | Purpose | Format |
 |----------|----------|---------|--------|
@@ -594,11 +655,11 @@ When a new session starts:
 
 ### Artifact Ownership
 
-@G **owns** router event logs, Build Plan, and execution state. These are @G's primary artifacts and no other role should modify them directly.
+@G **owns** packet plan.md, handoff.md, and packet.yml status. These are @G's primary artifacts and no other role should modify them directly (except `approved` which is set by Human Lead).
 
-@G **creates** handoff packets (for @E consumption) and approval records (for human review).
+@G **creates** handoff packets (for @E consumption) and manages packet lifecycle.
 
-@G **reads** artifacts from all other lanes (PRODUCT.md, TECH.md, Architecture Packets, completion packets) but does not modify them.
+@G **reads** artifacts from all other lanes (PRODUCT.md, TECH.md, Architecture Packets, acceptance.md) but does not modify them.
 
 ---
 
@@ -609,7 +670,7 @@ A @G routing action is complete when ALL of the following are true:
 - [ ] Transition request received and understood
 - [ ] FORGE-AUTONOMY.yml read and parsed (or defaults assumed)
 - [ ] Policy evaluated against current tier
-- [ ] Router event logged to `docs/router-events/YYYY-MM-DD.jsonl`
+- [ ] Transition logged (v2.0: git commit; v1.x: `docs/router-events/YYYY-MM-DD.jsonl`)
 - [ ] Tier-appropriate action taken:
   - **Tier 0:** Human instructed on what to do next
   - **Tier 1:** Human approval obtained (or rejection logged)
@@ -631,7 +692,7 @@ A @G routing action is complete when ALL of the following are true:
 | FORGE-AUTONOMY.yml missing | Warn, assume Tier 0, proceed |
 | FORGE-AUTONOMY.yml malformed | STOP, log error, instruct human to fix |
 | Unknown source or target role | Log error, refuse, instruct human |
-| Event log write failure | Attempt alternative logging (console), instruct human |
+| Event log write failure (v1.x) / git failure (v2.0) | Attempt alternative logging (console), instruct human |
 | Policy evaluation exception | Log error, fall back to Tier 0, instruct human |
 | Blast radius exceeded (Phase 2) | Refuse auto-dispatch, fall back to human approval |
 | Required approval missing | STOP, do not proceed, wait for human |
@@ -757,6 +818,18 @@ WAIT for human instruction
 
 ### Artifacts Cheat Sheet
 
+**v2.0 (template_version: "2.0"):**
+```
+_forge/inbox/active/[slug]/packet.yml   ← Packet metadata (5 fields)
+_forge/inbox/active/[slug]/README.md    ← Problem + scope + criteria
+_forge/inbox/active/[slug]/plan.md      ← Execution strategy (@G writes)
+_forge/inbox/active/[slug]/handoff.md   ← Task brief for @E (@G writes)
+_forge/inbox/active/[slug]/acceptance.md← Sacred Four results (@E writes)
+_forge/inbox/done/                      ← Execution ledger (permanent)
+FORGE-AUTONOMY.yml                      ← Autonomy policy (project root)
+```
+
+**v1.x (legacy):**
 ```
 docs/router-events/YYYY-MM-DD.jsonl  ← Router event log (append-only)
 inbox/30_ops/build-plan.md           ← Phased execution strategy
@@ -796,9 +869,10 @@ At any @G checkpoint, the human may respond:
 ```
 Pre-FORGE:  A (Acquire) → B (Brief, optional) → C (Commit)
                                                     │
-                                          abc/FORGE-ENTRY.md
+                                            Project Spawn
                                                     │
 FORGE:      F (Frame) → O (Orchestrate) → R (Refine) → G (Govern) → E (Execute)
+            Gate 1        Gate 2            Gate 3       Gate 4
                                                          ↑
                                                ALL transitions
                                                route through @G
@@ -808,20 +882,29 @@ FORGE:      F (Frame) → O (Orchestrate) → R (Refine) → G (Govern) → E (E
 
 ---
 
-## Appendix B: Router Event Log Examples
+## Appendix B: Event Log Examples
 
-### B.1 Typical Day (Tier 0)
+### B.1 v2.0 Git-Native Examples
+
+**Typical commit messages logged by @G:**
+
+```
+@G: refused F→O — PRODUCT.md complete, architecture needed (Tier 0)
+@G: created handoff — _forge/inbox/active/2026-02-11-auth-email-password/handoff.md
+@G: validated acceptance — Sacred Four PASS, forwarding to Human Lead for PR review
+@G: packet complete — moved 2026-02-11-auth-email-password to done/
+```
+
+**Querying:**
+```bash
+git log --oneline --grep="@G:" --since="2026-02-06"
+ls _forge/inbox/done/
+```
+
+### B.2 v1.x JSONL Examples (Legacy)
 
 ```jsonl
 {"timestamp":"2026-02-06T09:00:00Z","tier":0,"source_role":"F","target_role":"O","request_type":"transition","action":"refused_tier0","human_instruction":"Human must invoke @O directly","payload_summary":"PRODUCT.md complete, architecture needed","event_id":"evt_20260206_090000_f_o"}
-{"timestamp":"2026-02-06T11:30:00Z","tier":0,"source_role":"O","target_role":"R","request_type":"transition","action":"refused_tier0","human_instruction":"Human must invoke @R directly","payload_summary":"TECH.md and Architecture Packet complete, review needed","event_id":"evt_20260206_113000_o_r"}
-{"timestamp":"2026-02-06T13:00:00Z","tier":0,"source_role":"R","target_role":"G","request_type":"transition","action":"refused_tier0","human_instruction":"Human must invoke @G directly","payload_summary":"Review complete, no conflicts, ready for Build Plan","event_id":"evt_20260206_130000_r_g"}
-{"timestamp":"2026-02-06T14:00:00Z","tier":0,"source_role":"G","target_role":"E","request_type":"transition","action":"refused_tier0","human_instruction":"Human must invoke @E directly","payload_summary":"Handoff packet HO-2026-001 ready for execution","event_id":"evt_20260206_140000_g_e"}
-```
-
-### B.2 Error with Fallback
-
-```jsonl
 {"timestamp":"2026-02-06T15:10:03Z","tier":0,"source_role":"G","target_role":"E","request_type":"error","action":"fallback_tier0","human_instruction":"FORGE-AUTONOMY.yml parse error on line 12. Human must fix config and re-invoke @E directly.","payload_summary":"Handoff packet ready but policy evaluation failed","event_id":"evt_20260206_151003_g_e"}
 ```
 

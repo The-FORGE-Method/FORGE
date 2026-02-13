@@ -36,30 +36,39 @@ Before proceeding, verify project governance:
 
 ## Gating Logic
 
-```
-IF abc/FORGE-ENTRY.md DOES NOT EXIST:
-  STOP: "FORGE not unlocked. Complete @C (Commit) first.
-         abc/FORGE-ENTRY.md is required before FORGE lifecycle agents."
+FORGE lifecycle agents (@F/@O/@R/@G/@E) are available after project spawn. Progressive gates enforce readiness at each phase:
 
-OTHERWISE:
-  PROCEED normally
-```
+- **Gate 1 (@F):** PRODUCT.md complete with required sections
+- **Gate 2 (@O):** TECH.md complete with required sections
+- **Gate 3 (@R):** Coherence verified between PRODUCT.md and TECH.md
+- **Gate 4 (@G/@E):** Packet approved in `_forge/inbox/active/`
+
+Spawning from template = commitment. Constitution emptiness triggers @F to populate PRODUCT.md.
+
+## Template Version Detection (MANDATORY)
+
+Before any work, read `FORGE-AUTONOMY.yml` field `template_version`:
+- `"2.0"` → v2.0 paths: `_forge/inbox/active/`, `_forge/inbox/done/`, git-native logging
+- Missing or `"1.x"` → v1.x paths: `inbox/30_ops/`, `docs/router-events/`
+- Warn user if v1.x: "This project uses v1.x template. Consider migrating to v2.0."
 
 ## Structural Verification After @C (MANDATORY)
 
 When @C completes:
 1. Check for grandfathering (project created before 2026-02-10)
-2. If NOT grandfathered, run structural verification checklist
-3. On PASS: auto-generate `docs/ops/preflight-checklist.md`, log success, proceed to @F
-4. On FAIL: auto-generate `docs/ops/preflight-failure-report.md`, log failure, STOP
+2. If NOT grandfathered, run structural verification checklist (v2.0 or v1.x per template_version)
+3. On PASS: log success, proceed to @F
+4. On FAIL: report failure details, STOP
 
 ## Transition-Specific Validation (MANDATORY)
 
 Before approving transitions:
-- **@C → @F:** Structural verification passed
-- **@F → @O:** Actor planes assigned, auth model decided
-- **@O → @E:** AUTH-ARCHITECTURE ADR exists (if auth), test infra configured, handoff packet exists
-- **Universal:** Project under FORGE/projects/ or waived, router-events/ writable, FORGE-AUTONOMY.yml valid
+- **@C → @F:** Structural verification passed (Gate 0 — spawn complete)
+- **@F → @O:** Gate 1 passed (PRODUCT.md complete)
+- **@O → @R:** Gate 2 passed (TECH.md complete)
+- **@R → @E:** Gate 3 passed (coherence verified)
+- **@G → @E:** Gate 4 passed (packet approved)
+- **Universal:** Project under FORGE/projects/ or waived, FORGE-AUTONOMY.yml valid
 
 **HARD STOP on any failure.** Instruct human with specific missing items.
 
@@ -69,10 +78,12 @@ Before approving transitions:
 
 When user says "catch me up", "@G catch me up", or similar:
 
-1. Read project state: abc/FORGE-ENTRY.md, PRODUCT.md, TECH.md, docs/router-events/
-2. Identify current phase (which agent last completed work)
-3. Summarize: what's done, what's next, any blockers
-4. Suggest next action
+1. Read FORGE-AUTONOMY.yml for template_version
+2. v2.0: Read `_forge/inbox/active/` (current packets), `_forge/inbox/done/` (history), docs/constitution/
+3. v1.x: Read PRODUCT.md, TECH.md, docs/router-events/
+4. Identify current phase (which agent last completed work)
+5. Summarize: what's done, what's next, any blockers
+6. Suggest next action
 
 ### Transition Request (Tier 0 — Phase 1 Default)
 
@@ -94,8 +105,14 @@ When a role requests a transition to another role:
 
 ### Router Event Logging
 
-Log ALL transition events to `docs/router-events/YYYY-MM-DD.jsonl`:
+**v2.0:** Log transitions via git commit messages with structured metadata:
+```
+@G: [action] [source]→[target] — [summary]
+Tier: 0
+Action: refused_tier0 | approved_tier1 | dispatched
+```
 
+**v1.x:** Log ALL transition events to `docs/router-events/YYYY-MM-DD.jsonl`:
 ```json
 {
   "timestamp": "2026-02-06T14:32:15Z",
@@ -157,16 +174,29 @@ If `FORGE-AUTONOMY.yml` is missing or malformed → fall back to Tier 0.
 
 ## Artifacts
 
+**v2.0:**
+
+| Artifact | Path | Description |
+|----------|------|-------------|
+| Packet folder | `_forge/inbox/active/[slug]/` | Active work unit |
+| Plan | `_forge/inbox/active/[slug]/plan.md` | Execution strategy |
+| Handoff | `_forge/inbox/active/[slug]/handoff.md` | Task brief for @E |
+| Packet metadata | `_forge/inbox/active/[slug]/packet.yml` | Status + approval |
+| Execution ledger | `_forge/inbox/done/` | Completed packets (permanent) |
+| Transition log | Git commit history | Audit trail |
+
+**v1.x (legacy):**
+
 | Artifact | Path | Description |
 |----------|------|-------------|
 | Event logs | `docs/router-events/*.jsonl` | Append-only transition logs |
 | Build Plan | `BUILDPLAN.md` | State tracking (managed by @G) |
-| Handoff packets | Per transition | Context for target role |
+| Handoff packets | `inbox/30_ops/handoffs/` | Context for target role |
 
 ## Completion Gate
 
 - [ ] Transition request processed (refused, approved, or dispatched)
-- [ ] Event logged to router-events/
+- [ ] Event logged (v2.0: git commit; v1.x: router-events/)
 - [ ] Human instructed on next step (Tier 0) or target dispatched (Tier 1+)
 - [ ] Agent has STOPped
 

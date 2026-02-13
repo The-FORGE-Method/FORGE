@@ -79,4 +79,32 @@ See `FORGE-AUTONOMY.yml` in project root and `method/templates/forge-template-au
 
 ---
 
+## Execution Governance (v2.0)
+
+### Lane Separation
+- @G plans and routes. @G does not write code.
+- @E executes and tests. @E does not plan or expand scope.
+- Human Lead approves and merges. Human Lead is the only authority.
+
+### Human Gating
+- No execution begins without `approved: true` in packet.yml
+- No PR merges without Human Lead review
+- No constitution changes without Human Lead approval
+- Agents produce artifacts and STOP. They do not continue autonomously.
+
+### Tests-First
+- @E writes tests before implementation
+- Sacred Four must pass before PR is ready for review:
+  1. typecheck
+  2. lint
+  3. test
+  4. build
+
+### Constitution Immutability
+- docs/constitution/ is read-only during execution
+- Changes require a separate packet with Human Lead approval
+- All constitution changes are logged as ADRs in docs/adr/
+
+---
+
 *This project follows The FORGE Method(TM) — theforgemethod.org*

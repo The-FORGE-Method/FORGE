@@ -2,7 +2,7 @@
 
 # FORGE Execution Lane (E) Operating Guide
 
-**Version:** 1.1
+**Version:** 2.0
 **Status:** Canonical Reference
 **Role:** @E (Execution Agent/Human)
 **Phase:** Execute (E)
@@ -275,13 +275,20 @@ capability_limitations:
 
 Before accepting any handoff, @E MUST run pre-flight checks IN ORDER. These checks are HARD STOPS — if any check fails, @E produces a failure report and STOPS.
 
+### Check 0: Template Version Detection
+
+Read `FORGE-AUTONOMY.yml` field `template_version`:
+- If `"2.0"` → use v2.0 paths (`_forge/inbox/active/`)
+- If missing or `"1.x"` → use legacy paths (`inbox/30_ops/`)
+
 ### Check 1: Structure
 
 - [ ] Project root has CLAUDE.md
 - [ ] Project root has FORGE-AUTONOMY.yml
-- [ ] abc/FORGE-ENTRY.md exists
-- [ ] docs/ structure matches template scaffold
-- [ ] inbox/30_ops/handoffs/ exists
+- [ ] Gate 4 passed: Approved packet exists (v2.0: _forge/inbox/active/[slug]/packet.yml with approved: true; v1.x: handoff packet with approval_status: approved)
+- [ ] docs/constitution/ exists
+- [ ] v2.0: `_forge/inbox/active/` exists
+- [ ] v1.x: `inbox/30_ops/handoffs/` exists
 
 **IF ANY FAIL → HARD STOP.** Report: "Structure gate failed: [missing items]"
 
@@ -322,8 +329,8 @@ Before accepting any handoff, @E MUST run pre-flight checks IN ORDER. These chec
 ### Failure Reporting
 
 On any HARD STOP, @E:
-1. Produces pre-flight failure report: `docs/ops/preflight-failure-[handoff-id].md`
-2. Logs failure to completion packet (status: `blocked`)
+1. v2.0: Notes failure in packet README.md; v1.x: Produces `docs/ops/preflight-failure-[handoff-id].md`
+2. Logs failure to completion artifacts (status: `blocked`)
 3. Returns to @G with failure details
 4. STOPS (does not proceed with implementation)
 
@@ -448,7 +455,9 @@ approved_date: 2026-02-06
 
 **Format:** Markdown with YAML frontmatter
 
-**File location:** `ai_prompts/completed/<handoff_id>-completion.md`
+**File location:**
+- v2.0: `_forge/inbox/active/[slug]/acceptance.md`
+- v1.x: `ai_prompts/completed/<handoff_id>-completion.md`
 
 **YAML frontmatter (machine-readable truth for @G):**
 
@@ -640,7 +649,8 @@ quality_loops_run: 1 (Ralph iteration for test improvement)
 9. GENERATE COMPLETION PACKET
    - YAML frontmatter with metrics
    - Markdown narrative with context
-   - Save to `ai_prompts/completed/<handoff_id>-completion.md`
+   - v2.0: Save to `_forge/inbox/active/[slug]/acceptance.md`
+   - v1.x: Save to `ai_prompts/completed/<handoff_id>-completion.md`
 
 10. SUBMIT TO @G
     - Notify @G that completion packet is ready
@@ -1064,6 +1074,6 @@ These learnings from the Vantage project informed E lane formalization:
 
 *This operating guide is the canonical reference for @E (Execution) lane behavior in FORGE. All @E agents and humans must adhere to these protocols.*
 
-**Last Updated:** 2026-02-06
-**Version:** 1.0
+**Last Updated:** 2026-02-11
+**Version:** 2.0
 **Status:** Canonical Reference

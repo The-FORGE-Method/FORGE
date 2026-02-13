@@ -76,6 +76,24 @@ Before proceeding, verify project governance:
 
 **Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
 
+## Gate 2 Enforcement (Architecture Lock)
+
+@O enforces Gate 2. @R/@E cannot proceed until Gate 2 passes.
+
+**Prerequisite:** Gate 1 must pass first. @O checks that PRODUCT.md exists and is complete before beginning architecture work. If Gate 1 not met, @O redirects to @F with: "Cannot begin Orchestrate — Gate 1 not met. Invoke @F to complete PRODUCT.md first."
+
+**Gate 2 requirements:**
+- [ ] Gate 1 passed (PRODUCT.md complete)
+- [ ] TECH.md exists
+- [ ] Contains: stack, data_model, build_plan sections
+- [ ] AUTH-ARCHITECTURE ADR exists (for multi-user/multi-role projects)
+- [ ] Test architecture specified (framework, coverage, Sacred Four commands)
+- [ ] RLS policy mapping documented (if auth in scope)
+
+**On completion:** @O declares "Gate 2 passed. TECH.md complete. Human: invoke @R for coherence review."
+
+**Human Lead bypass:** Human can say "skip Gate 2" or "proceed without Gate 2" to bypass (NOT RECOMMENDED — Architecture lock ensures design clarity before execution).
+
 ## Completion Gate (MANDATORY)
 
 TECH.md is NOT complete until:

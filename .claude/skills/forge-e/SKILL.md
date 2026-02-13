@@ -34,29 +34,38 @@ Before proceeding, verify project governance:
 
 **Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
 
-## Gating Logic
+## Gating Logic (Gate 4 Enforcement)
 
 ```
-IF abc/FORGE-ENTRY.md DOES NOT EXIST:
-  STOP: "FORGE not unlocked. Complete @C (Commit) first.
-         abc/FORGE-ENTRY.md is required before FORGE lifecycle agents."
+IF packet does NOT exist in _forge/inbox/active/[slug]/:
+  STOP: "No packet found. @G must create packet in _forge/inbox/active/ first."
+
+IF packet.yml approved != true:
+  STOP: "Packet not approved. Human Lead must set approved: true in packet.yml before execution."
 
 OTHERWISE:
-  PROCEED normally — check for handoff packet or explicit instructions
+  PROCEED with pre-flight verification
 ```
+
+## Template Version Detection (MANDATORY)
+
+Read `FORGE-AUTONOMY.yml` field `template_version`:
+- `"2.0"` → v2.0 paths: read handoff from `_forge/inbox/active/[slug]/handoff.md`, write acceptance to `_forge/inbox/active/[slug]/acceptance.md`, check `packet.yml` for `approved: true`
+- Missing or `"1.x"` → v1.x paths: read handoff from `inbox/30_ops/handoffs/`, write completion to `ai_prompts/completed/`
 
 ## Pre-Flight Verification (MANDATORY)
 
 Before accepting any handoff, run pre-flight checks:
 
-1. **Structure gate** — Verify CLAUDE.md, FORGE-AUTONOMY.yml, abc/FORGE-ENTRY.md, docs/, inbox/ exist
-2. **Test infrastructure gate** — Verify test framework installed, config exists, tests execute (EXCEPTION: `is_test_setup: true` flag)
-3. **Auth readiness gate** — Verify AUTH-ARCHITECTURE ADR exists (if handoff involves auth)
-4. **Sacred Four dry run** — Run typecheck, lint, test, build (WARN on failure, not HARD STOP)
+1. **Structure gate** — Verify CLAUDE.md, FORGE-AUTONOMY.yml, docs/constitution/ exist. Gate 4 passed (packet approved). v2.0: verify `_forge/inbox/active/` exists. v1.x: verify `inbox/` exists.
+2. **Approval gate** — v2.0: verify `approved: true` in `packet.yml`. v1.x: verify `approval_status: approved` in handoff packet.
+3. **Test infrastructure gate** — Verify test framework installed, config exists, tests execute (EXCEPTION: `is_test_setup: true` flag)
+4. **Auth readiness gate** — Verify AUTH-ARCHITECTURE ADR exists (if handoff involves auth)
+5. **Sacred Four dry run** — Run typecheck, lint, test, build (WARN on failure, not HARD STOP)
 
-**HARD STOP conditions:** Missing structure, missing test infrastructure (unless PR-000), missing auth architecture (if auth work).
+**HARD STOP conditions:** Missing structure, missing approval, missing test infrastructure (unless PR-000), missing auth architecture (if auth work).
 
-**Failure action:** Produce `docs/ops/preflight-failure-[handoff-id].md`, log to completion packet (status: `blocked`), return to @G, STOP.
+**Failure action:** v2.0: Note failure in packet README.md. v1.x: Produce `docs/ops/preflight-failure-[handoff-id].md`. Log to completion artifacts (status: `blocked`), return to @G, STOP.
 
 ## Workflow
 

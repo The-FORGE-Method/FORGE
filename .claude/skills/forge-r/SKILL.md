@@ -34,6 +34,24 @@ Before proceeding, verify project governance:
 
 **Exception:** @A (Acquire) runs this check as a planning verification (project will be created at valid location), not a gate.
 
+## Gate 3 Enforcement (Coherence Review)
+
+@R enforces Gate 3. @E cannot proceed until Gate 3 passes.
+
+**Prerequisite:** Gate 2 must pass first. @R checks that TECH.md exists and is complete before reviewing for coherence. If Gate 2 not met, @R redirects with: "Cannot begin Refine — Gate 2 not met. Invoke @O to complete TECH.md first."
+
+**Gate 3 requirements:**
+- [ ] Gate 2 passed (TECH.md complete)
+- [ ] @R reviewed PRODUCT.md ↔ TECH.md alignment
+- [ ] No unresolved conflicts between product intent and architecture
+- [ ] All missing use cases identified and resolved
+- [ ] All sequencing risks surfaced and addressed
+- [ ] All constraint conflicts resolved or documented
+
+**On completion:** @R declares "Gate 3 passed. Coherence verified. Human: invoke @G to begin execution planning."
+
+**Human Lead bypass:** Human can say "skip Gate 3" or "proceed without Gate 3" if confident in alignment (NOT RECOMMENDED — Coherence review prevents costly rework during execution).
+
 ## Gating Logic
 
 ```

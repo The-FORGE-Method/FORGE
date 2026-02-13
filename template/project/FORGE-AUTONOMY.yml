@@ -1,9 +1,11 @@
 # FORGE Autonomy Policy
-# Schema version: 0.1
+# Schema version: 0.2
 # Documentation: method/templates/forge-template-autonomy-policy.md
 # Introduced: v1.3.0 (Decision-005)
+# Updated: v2.0 (Template Simplification)
 
-version: 0.1
+version: 0.2
+template_version: "2.0"
 
 # Autonomy tier determines routing behavior
 # Tier 0: @G refuses transitions, instructs human (default)
@@ -12,17 +14,33 @@ version: 0.1
 # Tier 3: Full autonomous pipeline (Phase 2)
 tier: 0
 
-# Pre-FORGE gate: file that must exist to unlock F/O/R/G/E agents
-forge_entry:
-  required_file: "abc/FORGE-ENTRY.md"
-  unlock_on_approval: true
+# Progressive lifecycle gates (v2.0 enforcement model)
+# Gates enforce readiness at each FORGE phase
+# All gates are human-bypassable with explicit instruction
+lifecycle_gates:
+  gate_1_prd:
+    agent: F
+    artifact: "docs/constitution/PRODUCT.md"
+    required_sections: ["description", "actors", "use_cases", "mvp", "success_criteria"]
+  gate_2_architecture:
+    agent: O
+    artifact: "docs/constitution/TECH.md"
+    requires: gate_1_prd
+    required_sections: ["stack", "data_model", "build_plan"]
+  gate_3_coherence:
+    agent: R
+    requires: gate_2_architecture
+  gate_4_execution:
+    agent: [G, E]
+    requires: gate_3_coherence
+    packet_path: "_forge/inbox/active/"
 
 # Router behavior constraints
 router:
   # All transitions must route through @G (no direct role-to-role)
   allow_direct_role_to_role: false
-  # Where transition events are logged
-  event_log_path: "docs/router-events/"
+  # Transition events logged via git commit history (v2.0)
+  event_log_path: "git"
 
 # Allowed transitions when @G is permitted to route (Tier 1+)
 # Tier 0 ignores this and refuses all transitions
